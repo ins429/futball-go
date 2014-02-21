@@ -1,0 +1,36 @@
+<section class="wrapper" ng-controller="Images" ng-init="initImages()">
+  <div id="images-controller-header">
+    <button ng-if="user" class="button float-left" ng-click="newImage()">New</button>
+    <div class="float-right">
+      <i class="fa fa-search"></i><input type="text" id="search" ng-model="searchValue"/>
+      <button class="button" ng-click="searchImages(searchValue)">Search</button>
+    </div>
+    <div class="clear"></div>
+  </div>
+  <div class="images-wrapper">
+    <div ng-repeat="image in images" class="image-wrapper">
+      <div class="card">
+        <div class="card-header">
+          <h3>{{ image.name }}</h3>
+        </div>
+        <div class="image-box no-selection">
+          <img width=320 height=240 ng-src="{{ image.urls.original }}" ng-if="image.urls" class="center" />
+          <img ng-src="{{ image.url }}" ng-if="image.url" class="center" />
+        </div>
+        <div class="tags-wrapper">
+          <ul ng-if="image.tags">
+            <li class="tag" ng-repeat="tag in image.tags">{{ tag }}</li>
+          </ul>
+        </div>
+        <div class="cud no-selection" ng-if="user && image.user_id === user.id || user && user.admin">
+          <div class="cud-buttons">
+            <button class="button" ng-click="editImage(image)"><i class="fa fa-pencil-square-o"></i>Edit</button>
+            <button class="button" ng-click="deleteImage(image.id)"><i class="fa fa-trash-o"></i>Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ng-include src="formUrl">
+  </ng-include>
+</section>
