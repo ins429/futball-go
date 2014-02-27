@@ -4,27 +4,64 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/codegangsta/martini"
+	"github.com/codegangsta/martini-contrib/binding"
 	"github.com/codegangsta/martini-contrib/render"
+	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
 	"io"
+	"log"
 	"net/http"
 	"os"
+	"strconv"
+
+	// for password
+	"code.google.com/p/go.crypto/bcrypt"
+	// "time"
 )
 
 type Image struct {
-	Name string
-	Url  string
+	Id   int64  `json:"id"`
+	Name string `json:"name"`
+	// Url  string `json:"url"`
+	// created_at         time.Time
+	// updated_at         string
+	// url                string
+	// tags               []string
+	// user_id            int64
+	// image_file_name    string
+	// image_content_type string
+	// image_file_size    int64
+	// image_updated_at   time.Time
+	// confirmed          bool
+}
+
+type ErrorResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+type ImageResponse struct {
+	Code   int     `json:"code"`
+	Images []Image `json:"images"`
+}
+
+type UserForm struct {
+	Username string `form:"username"`
+	Password string `form:"password"`
+}
+
+type User struct {
+	Id       int64  `json:"id"`
+	Username string `json:"username"`
+	password string `json:"password"`
 }
 
 func main() {
 	m := martini.Classic()
-	// m.Get("/", func() string {
-	// 	return "Hello world!"
-	// })
 
 	db, err := sql.Open("postgres", "user=ins429 dbname=futball_gifs_development sslmode=disable")
 	if err != nil {
-		fmt.Print(err)
+		log.Fatal(err)
 	}
 
 	m.Use(render.Renderer(render.Options{
@@ -35,19 +72,120 @@ func main() {
 		r.HTML(200, "index", nil)
 	})
 
-	m.Get("/images/:id", func(params martini.Params, r render.Render) {
-		rows, err := db.Query("SELECT * FROM images WHERE id = $1", params["id"])
+	// query images
+	m.Get("/images", func(params martini.Params, r render.Render, w http.ResponseWriter, req *http.Request) {
+		checkSession(req, w)
+
+		limit, _ := strconv.ParseInt(req.URL.Query().Get("limit"), 10, 0)
+		skip, _ := strconv.ParseInt(req.URL.Query().Get("skip"), 10, 0)
+
+		// set default skip to 10
+		if limit < 10 {
+			limit = 10
+		}
+
+		rows, err := db.Query("SELECT id, name FROM images LIMIT $1 OFFSET $2", limit, skip)
 		if err != nil {
-			fmt.Print(err)
+			log.Fatal(err)
 		}
+
+		defer rows.Close()
+
+		// for the consistency on the response, put it in array
+		images := []Image{}
 		for rows.Next() {
-			var name string
-			if err := rows.Scan(&name); err != nil {
-				fmt.Print(err)
+			var i Image
+			err = rows.Scan(&i.Id, &i.Name)
+			if err != nil {
+				fmt.Println("Scan: ", err)
 			}
-			fmt.Printf(name)
+
+			images = append(images, i)
 		}
-		r.JSON(200, Image{"hello", "world!"})
+
+		// build response for images
+		res := &ImageResponse{
+			Code:   200,
+			Images: images}
+
+		r.JSON(200, res)
+	})
+
+	// get image by id
+	m.Get("/images/:id", func(params martini.Params, r render.Render) {
+		// query by the image id
+		rows, err := db.Query("SELECT id, name FROM images WHERE id = $1", params["id"])
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		defer rows.Close()
+
+		images := []Image{}
+		for rows.Next() {
+			var i Image
+			err = rows.Scan(&i.Id, &i.Name)
+			if err != nil {
+				fmt.Println("Scan: ", err)
+			}
+
+			images = append(images, i)
+		}
+
+		// build response for images
+		res := &ImageResponse{
+			Code:   200,
+			Images: images}
+
+		r.JSON(200, res)
+	})
+
+	// user login
+	m.Post("/login", binding.Form(UserForm{}), func(userForm UserForm, r render.Render, w http.ResponseWriter, req *http.Request) {
+
+		//
+		rows, _ := db.Query("SELECT id, username, encrypted_password FROM users WHERE username = $1", userForm.Username)
+
+		var u User
+		for rows.Next() {
+			err = rows.Scan(&u.Id, &u.Username, &u.password)
+			if err != nil {
+				fmt.Println("Scan: ", err)
+			}
+		}
+
+		pass := []byte(userForm.Password)
+		upass := []byte(u.password)
+
+		fmt.Println(bcrypt.CompareHashAndPassword(upass, pass))
+
+		if bcrypt.CompareHashAndPassword(upass, pass) == nil {
+			saveSession(req, w, u.Id)
+			r.JSON(200, u)
+		} else {
+			r.JSON(400, &ErrorResponse{
+				Code:    400,
+				Message: "Failed to login!"})
+		}
+	})
+
+	// user signup
+	m.Post("/signup", binding.Form(UserForm{}), func(userForm UserForm, r render.Render) {
+		pass := []byte(userForm.Password)
+		p, err := bcrypt.GenerateFromPassword(pass, bcrypt.DefaultCost)
+		if err != nil {
+			fmt.Println("umm.. error on GenerateFromPassword")
+			return
+		}
+
+		_, err = db.Exec("INSERT INTO users (username, encrypted_password) VALUES ($1, $2)", userForm.Username, p)
+		if err != nil {
+			fmt.Println("Insert error", err)
+			r.JSON(500, userForm)
+			return
+		}
+
+		r.JSON(200, userForm)
 	})
 
 	m.Post("/images", func(w http.ResponseWriter, r *http.Request) {
@@ -74,5 +212,95 @@ func main() {
 		fmt.Fprintf(w, "File %s uploaded successfully.", header.Filename)
 	})
 
+	// get image by id
+	m.Get("/showme", func(params martini.Params, r render.Render, w http.ResponseWriter, req *http.Request) {
+		// query by the image id
+		checkSession(req, w)
+
+		r.JSON(200, UserForm{})
+	})
+
+	http.ListenAndServe(":8080", m)
 	m.Run()
+}
+
+func checkSession(req *http.Request, rsp http.ResponseWriter) {
+	store := NewPGStore("user=ins429 dbname=futball_gifs_development sslmode=disable", []byte("something-very-secret"))
+
+	defer store.Close()
+
+	// Get a session.
+	session, err := store.Get(req, "session-key")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(session)
+
+	fmt.Println(session.Values["user_id"])
+	// Add a value.
+	// session.Values["user_id"] = "1"
+
+	// Save.
+	if err = sessions.Save(req, rsp); err != nil {
+		fmt.Println(err)
+		log.Fatalf("Error saving session: %v", err)
+	}
+
+	// Delete session.
+	// session.Options.MaxAge = -1
+	// if err = sessions.Save(req, rsp); err != nil {
+	// 	fmt.Println(err)
+	// 	log.Fatalf("Error saving session: %v", err)
+	// }
+}
+
+func isUserLogged(req *http.Request, rsp http.ResponseWriter) bool {
+	store := NewPGStore("user=ins429 dbname=futball_gifs_development sslmode=disable", []byte("something-very-secret"))
+
+	defer store.Close()
+
+	// Get a session.
+	session, err := store.Get(req, "session-key")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(session)
+
+	fmt.Println(session.Values["user_id"])
+	// Add a value.
+	// session.Values["user_id"] = "1"
+
+	// Save.
+	if err = sessions.Save(req, rsp); err != nil {
+		fmt.Println(err)
+		log.Fatalf("Error saving session: %v", err)
+	}
+
+	return session.Values["user_id"] != nil
+}
+
+func saveSession(req *http.Request, rsp http.ResponseWriter, userId int64) {
+	store := NewPGStore("user=ins429 dbname=futball_gifs_development sslmode=disable", []byte("something-very-secret"))
+
+	defer store.Close()
+
+	// Get a session.
+	session, err := store.Get(req, "session-key")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(session)
+
+	fmt.Println(session.Values["user_id"])
+	// Add a value.
+	session.Values["user_id"] = userId
+
+	// Save.
+	if err = sessions.Save(req, rsp); err != nil {
+		fmt.Println(err)
+		log.Fatalf("Error saving session: %v", err)
+	}
 }
