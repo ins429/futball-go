@@ -46,20 +46,20 @@ type ImageResponse struct {
 }
 
 type UserForm struct {
-	Username string `form:"username"`
+	Email    string `form:"email"`
 	Password string `form:"password"`
 }
 
 type User struct {
 	Id       int64  `json:"id"`
-	Username string `json:"username"`
+	Email    string `json:"email"`
 	password string `json:"password"`
 }
 
 func main() {
 	m := martini.Classic()
 
-	db, err := sql.Open("postgres", "user=ins429 dbname=futball_gifs_development sslmode=disable")
+	db, err := sql.Open("postgres", "user=ins429 dbname=fcards sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -143,12 +143,10 @@ func main() {
 	// user login
 	m.Post("/login", binding.Form(UserForm{}), func(userForm UserForm, r render.Render, w http.ResponseWriter, req *http.Request) {
 
-		//
-		rows, _ := db.Query("SELECT id, username, encrypted_password FROM users WHERE username = $1", userForm.Username)
-
+		rows, _ := db.Query("SELECT id, email, encrypted_password FROM users WHERE email = $1", userForm.Email)
 		var u User
 		for rows.Next() {
-			err = rows.Scan(&u.Id, &u.Username, &u.password)
+			err = rows.Scan(&u.Id, &u.Email, &u.password)
 			if err != nil {
 				fmt.Println("Scan: ", err)
 			}
@@ -174,11 +172,14 @@ func main() {
 		pass := []byte(userForm.Password)
 		p, err := bcrypt.GenerateFromPassword(pass, bcrypt.DefaultCost)
 		if err != nil {
+			fmt.Println(pass)
+			fmt.Println(userForm.Password)
+			fmt.Println(err)
 			fmt.Println("umm.. error on GenerateFromPassword")
 			return
 		}
 
-		_, err = db.Exec("INSERT INTO users (username, encrypted_password) VALUES ($1, $2)", userForm.Username, p)
+		_, err = db.Exec("INSERT INTO users (email, encrypted_password) VALUES ($1, $2)", userForm.Email, p)
 		if err != nil {
 			fmt.Println("Insert error", err)
 			r.JSON(500, userForm)
@@ -225,7 +226,7 @@ func main() {
 }
 
 func checkSession(req *http.Request, rsp http.ResponseWriter) {
-	store := NewPGStore("user=ins429 dbname=futball_gifs_development sslmode=disable", []byte("something-very-secret"))
+	store := NewPGStore("user=ins429 dbname=fcards sslmode=disable", []byte("something-very-secret"))
 
 	defer store.Close()
 
@@ -256,7 +257,7 @@ func checkSession(req *http.Request, rsp http.ResponseWriter) {
 }
 
 func isUserLogged(req *http.Request, rsp http.ResponseWriter) bool {
-	store := NewPGStore("user=ins429 dbname=futball_gifs_development sslmode=disable", []byte("something-very-secret"))
+	store := NewPGStore("user=ins429 dbname=fcards sslmode=disable", []byte("something-very-secret"))
 
 	defer store.Close()
 
@@ -282,7 +283,7 @@ func isUserLogged(req *http.Request, rsp http.ResponseWriter) bool {
 }
 
 func saveSession(req *http.Request, rsp http.ResponseWriter, userId int64) {
-	store := NewPGStore("user=ins429 dbname=futball_gifs_development sslmode=disable", []byte("something-very-secret"))
+	store := NewPGStore("user=ins429 dbname=fcards sslmode=disable", []byte("something-very-secret"))
 
 	defer store.Close()
 
