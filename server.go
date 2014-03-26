@@ -9,30 +9,22 @@ import (
 	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	// for password
 	"code.google.com/p/go.crypto/bcrypt"
 	// "time"
+	"code.google.com/p/go.net/html"
 )
 
-type Image struct {
+type Card struct {
 	Id   int64  `json:"id"`
 	Name string `json:"name"`
-	// Url  string `json:"url"`
-	// created_at         time.Time
-	// updated_at         string
-	// url                string
-	// tags               []string
-	// user_id            int64
-	// image_file_name    string
-	// image_content_type string
-	// image_file_size    int64
-	// image_updated_at   time.Time
-	// confirmed          bool
 }
 
 type ErrorResponse struct {
@@ -40,9 +32,9 @@ type ErrorResponse struct {
 	Message string `json:"message"`
 }
 
-type ImageResponse struct {
-	Code   int     `json:"code"`
-	Images []Image `json:"images"`
+type CardResponse struct {
+	Code  int    `json:"code"`
+	Cards []Card `json:"cards"`
 }
 
 type UserForm struct {
@@ -72,8 +64,9 @@ func main() {
 		r.HTML(200, "index", nil)
 	})
 
-	// query images
-	m.Get("/images", func(params martini.Params, r render.Render, w http.ResponseWriter, req *http.Request) {
+	// query cards
+	m.Get("/cards", func(params martini.Params, r render.Render, w http.ResponseWriter, req *http.Request) {
+		ExampleParse()
 		checkSession(req, w)
 
 		limit, _ := strconv.ParseInt(req.URL.Query().Get("limit"), 10, 0)
@@ -84,7 +77,7 @@ func main() {
 			limit = 10
 		}
 
-		rows, err := db.Query("SELECT id, name FROM images LIMIT $1 OFFSET $2", limit, skip)
+		rows, err := db.Query("SELECT id, name FROM cards LIMIT $1 OFFSET $2", limit, skip)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -92,50 +85,51 @@ func main() {
 		defer rows.Close()
 
 		// for the consistency on the response, put it in array
-		images := []Image{}
+		cards := []Card{}
 		for rows.Next() {
-			var i Image
+			var i Card
 			err = rows.Scan(&i.Id, &i.Name)
 			if err != nil {
 				fmt.Println("Scan: ", err)
 			}
 
-			images = append(images, i)
+			cards = append(cards, i)
 		}
 
-		// build response for images
-		res := &ImageResponse{
-			Code:   200,
-			Images: images}
+		// build response for cards
+		res := &CardResponse{
+			Code:  200,
+			Cards: cards}
 
 		r.JSON(200, res)
 	})
 
-	// get image by id
-	m.Get("/images/:id", func(params martini.Params, r render.Render) {
-		// query by the image id
-		rows, err := db.Query("SELECT id, name FROM images WHERE id = $1", params["id"])
+	// get card by id
+	m.Get("/cards/:id", func(params martini.Params, r render.Render) {
+		// query by the card id
+		ExampleParse()
+		rows, err := db.Query("SELECT id, name FROM cards WHERE id = $1", params["id"])
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		defer rows.Close()
 
-		images := []Image{}
+		cards := []Card{}
 		for rows.Next() {
-			var i Image
+			var i Card
 			err = rows.Scan(&i.Id, &i.Name)
 			if err != nil {
 				fmt.Println("Scan: ", err)
 			}
 
-			images = append(images, i)
+			cards = append(cards, i)
 		}
 
-		// build response for images
-		res := &ImageResponse{
-			Code:   200,
-			Images: images}
+		// build response for cards
+		res := &CardResponse{
+			Code:  200,
+			Cards: cards}
 
 		r.JSON(200, res)
 	})
@@ -189,7 +183,7 @@ func main() {
 		r.JSON(200, userForm)
 	})
 
-	m.Post("/images", func(w http.ResponseWriter, r *http.Request) {
+	m.Post("/cards", func(w http.ResponseWriter, r *http.Request) {
 		file, header, err := r.FormFile("file")
 		defer file.Close()
 
@@ -213,9 +207,7 @@ func main() {
 		fmt.Fprintf(w, "File %s uploaded successfully.", header.Filename)
 	})
 
-	// get image by id
 	m.Get("/showme", func(params martini.Params, r render.Render, w http.ResponseWriter, req *http.Request) {
-		// query by the image id
 		checkSession(req, w)
 
 		r.JSON(200, UserForm{})
@@ -304,4 +296,33 @@ func saveSession(req *http.Request, rsp http.ResponseWriter, userId int64) {
 		fmt.Println(err)
 		log.Fatalf("Error saving session: %v", err)
 	}
+}
+
+func ExampleParse() {
+	resp, err := http.Get("http://www.google.com/")
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	s := string(body)
+	doc, err := html.Parse(strings.NewReader(s))
+	if err != nil {
+		log.Fatal(err)
+	}
+	var f func(*html.Node)
+	f = func(n *html.Node) {
+		if n.Type == html.ElementNode && n.Data == "a" {
+			for _, a := range n.Attr {
+				if a.Key == "href" {
+					fmt.Println(a.Val)
+					break
+				}
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			f(c)
+		}
+	}
+	f(doc)
+	// Output:
+	// foo
+	// /bar/baz
 }

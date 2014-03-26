@@ -16,6 +16,13 @@ CREATE TABLE users (
   updated_at DATE
 );
 
+CREATE TABLE cards (
+  id SERIAL,
+  name TEXT,
+  created_at DATE,
+  updated_at DATE
+);
+
 ALTER TABLE users ADD id SERIAL;
 
 curl -d "email=ins429@gmail.com&password=pass" "localhost:8080/signup"
