@@ -299,7 +299,7 @@ func saveSession(req *http.Request, rsp http.ResponseWriter, userId int64) {
 }
 
 func ExampleParse() {
-	resp, err := http.Get("http://www.google.com/")
+	resp, err := http.Get("http://www.premierleague.com/en-gb/players/profile.statistics.html/luis-suarez")
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	s := string(body)
@@ -312,7 +312,23 @@ func ExampleParse() {
 		if n.Type == html.ElementNode && n.Data == "a" {
 			for _, a := range n.Attr {
 				if a.Key == "href" {
-					fmt.Println(a.Val)
+					// fmt.Println(a.Val)
+					break
+				}
+			}
+		} else if n.Type == html.ElementNode && n.Data == "div" {
+			// fmt.Println("data: ")
+			// fmt.Println(n.Data)
+			// fmt.Println(n.Type)
+			// fmt.Println(n.DataAtom)
+			// fmt.Println("attr ")
+			// fmt.Println(n.Attr)
+			for _, a := range n.Attr {
+				if a.Key == "class" && a.Val == "data" {
+					if n.NextSibling.Type == html.TextNode {
+						// fmt.Println(n.NextSibling.Data)
+					}
+					// fmt.Println(a.Val)
 					break
 				}
 			}
@@ -325,4 +341,82 @@ func ExampleParse() {
 	// Output:
 	// foo
 	// /bar/baz
+
+	// element node = 3
+	// text node = 1
+
+	var fff func(*html.Node)
+	fff = func(n *html.Node) {
+		if n.Type == html.TextNode {
+			if n.Type == html.ElementNode && n.Data == "div" {
+				for _, a := range n.Attr {
+					if a.Key == "class" && a.Val == "data" {
+						fmt.Printf("%q\n", n.Data)
+						return
+						break
+					}
+				}
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			fff(c)
+		}
+	}
+
+	var ff func(*html.Node, bool)
+	ff = func(n *html.Node, printText bool) {
+		fmt.Println(n.Type)
+		if printText && n.Type == html.TextNode {
+			// fmt.Printf("%q\n", n.Data)
+		}
+
+		if n.Type == html.TextNode {
+			if strings.ToLower(n.Data) == "goals" {
+				fmt.Println(n.Data)
+				for c := n.FirstChild; c != nil; c = c.NextSibling {
+					fff(c)
+				}
+			}
+		}
+
+		if n.Type == html.ElementNode && n.Data == "div" {
+			for _, a := range n.Attr {
+				if a.Key == "class" && a.Val == "data" {
+					printText = true
+					break
+				}
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			ff(c, printText)
+		}
+	}
+	ff(doc, false)
 }
+
+// func GetGoals(Node doc) string {
+// 	var ff func(*html.Node, bool)
+// 	// goals := 0
+// 	ff = func(n *html.Node, printText bool) {
+// 		if printText && n.Type == html.TextNode {
+// 			if strings.ToLower(n.Data) == "goals" {
+// 				fmt.Printf("%q\n", n.Data)
+// 				// goals = strconv.ParseInt(n.Data)
+// 			}
+// 		}
+
+// 		if n.Type == html.ElementNode && n.Data == "div" {
+// 			for _, a := range n.Attr {
+// 				if a.Key == "class" && a.Val == "data" {
+// 					printText = true
+// 					break
+// 				}
+// 			}
+// 		}
+// 		for c := n.FirstChild; c != nil; c = c.NextSibling {
+// 			ff(c, printText)
+// 		}
+// 	}
+// 	ff(doc, false)
+// 	return goals
+// }
