@@ -9,17 +9,20 @@ import (
 	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+
 	"strings"
+	"unicode"
+
+	// goquery
+	. "github.com/PuerkitoBio/goquery"
 
 	// for password
 	"code.google.com/p/go.crypto/bcrypt"
 	// "time"
-	"code.google.com/p/go.net/html"
 )
 
 type Card struct {
@@ -66,7 +69,6 @@ func main() {
 
 	// query cards
 	m.Get("/cards", func(params martini.Params, r render.Render, w http.ResponseWriter, req *http.Request) {
-		ExampleParse()
 		checkSession(req, w)
 
 		limit, _ := strconv.ParseInt(req.URL.Query().Get("limit"), 10, 0)
@@ -107,7 +109,6 @@ func main() {
 	// get card by id
 	m.Get("/cards/:id", func(params martini.Params, r render.Render) {
 		// query by the card id
-		ExampleParse()
 		rows, err := db.Query("SELECT id, name FROM cards WHERE id = $1", params["id"])
 		if err != nil {
 			log.Fatal(err)
@@ -213,6 +214,19 @@ func main() {
 		r.JSON(200, UserForm{})
 	})
 
+	m.Get("/players/:name", func(params martini.Params, r render.Render) {
+		playerStat, _ := GetPlayerStat(params["name"])
+		playerStats := []PlayerStat{}
+		playerStats = append(playerStats, *playerStat)
+
+		// build response for player stats
+		res := &PlayerStatsResponse{
+			Code:  200,
+			Stats: playerStats}
+
+		r.JSON(200, res)
+	})
+
 	http.ListenAndServe(":8080", m)
 	m.Run()
 }
@@ -298,125 +312,110 @@ func saveSession(req *http.Request, rsp http.ResponseWriter, userId int64) {
 	}
 }
 
-func ExampleParse() {
-	resp, err := http.Get("http://www.premierleague.com/en-gb/players/profile.statistics.html/luis-suarez")
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	s := string(body)
-	doc, err := html.Parse(strings.NewReader(s))
-	if err != nil {
-		log.Fatal(err)
-	}
-	var f func(*html.Node)
-	f = func(n *html.Node) {
-		if n.Type == html.ElementNode && n.Data == "a" {
-			for _, a := range n.Attr {
-				if a.Key == "href" {
-					// fmt.Println(a.Val)
-					break
-				}
-			}
-		} else if n.Type == html.ElementNode && n.Data == "div" {
-			// fmt.Println("data: ")
-			// fmt.Println(n.Data)
-			// fmt.Println(n.Type)
-			// fmt.Println(n.DataAtom)
-			// fmt.Println("attr ")
-			// fmt.Println(n.Attr)
-			for _, a := range n.Attr {
-				if a.Key == "class" && a.Val == "data" {
-					if n.NextSibling.Type == html.TextNode {
-						// fmt.Println(n.NextSibling.Data)
-					}
-					// fmt.Println(a.Val)
-					break
-				}
-			}
-		}
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			f(c)
-		}
-	}
-	f(doc)
-	// Output:
-	// foo
-	// /bar/baz
-
-	// element node = 3
-	// text node = 1
-
-	var fff func(*html.Node)
-	fff = func(n *html.Node) {
-		if n.Type == html.TextNode {
-			if n.Type == html.ElementNode && n.Data == "div" {
-				for _, a := range n.Attr {
-					if a.Key == "class" && a.Val == "data" {
-						fmt.Printf("%q\n", n.Data)
-						return
-						break
-					}
-				}
-			}
-		}
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			fff(c)
-		}
-	}
-
-	var ff func(*html.Node, bool)
-	ff = func(n *html.Node, printText bool) {
-		fmt.Println(n.Type)
-		if printText && n.Type == html.TextNode {
-			// fmt.Printf("%q\n", n.Data)
-		}
-
-		if n.Type == html.TextNode {
-			if strings.ToLower(n.Data) == "goals" {
-				fmt.Println(n.Data)
-				for c := n.FirstChild; c != nil; c = c.NextSibling {
-					fff(c)
-				}
-			}
-		}
-
-		if n.Type == html.ElementNode && n.Data == "div" {
-			for _, a := range n.Attr {
-				if a.Key == "class" && a.Val == "data" {
-					printText = true
-					break
-				}
-			}
-		}
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			ff(c, printText)
-		}
-	}
-	ff(doc, false)
+type PlayerStatsResponse struct {
+	Code  int          `json:"code"`
+	Stats []PlayerStat `json:"stats"`
 }
 
-// func GetGoals(Node doc) string {
-// 	var ff func(*html.Node, bool)
-// 	// goals := 0
-// 	ff = func(n *html.Node, printText bool) {
-// 		if printText && n.Type == html.TextNode {
-// 			if strings.ToLower(n.Data) == "goals" {
-// 				fmt.Printf("%q\n", n.Data)
-// 				// goals = strconv.ParseInt(n.Data)
-// 			}
-// 		}
+type PlayerStat struct {
+	Club        string `json:"club"`
+	Position    string `json:"position"`
+	Goals       int64  `json:"goals"`
+	Shots       int64  `json:"shots"`
+	Penalties   int64  `json:"penalties"`
+	Assists     int64  `json:"assists"`
+	Crosses     int64  `json:"crosses"`
+	Offsides    int64  `json:"offsides"`
+	SavesMade   int64  `json:"savesMade"`
+	OwnGoals    int64  `json:"ownGoals"`
+	CleanSheets int64  `json:"cleanSheets"`
+	Blocks      int64  `json:"blocks"`
+	Clearances  int64  `json:"clearances"`
+	Fouls       int64  `json:"fouls"`
+	Cards       int64  `json:"cards"`
+	Dob         string `json:"dob"`
+	Height      string `json:"height"`
+	Age         int64  `json:"age"`
+	Weight      string `json:"weight"`
+	National    string `json:"national"`
+}
 
-// 		if n.Type == html.ElementNode && n.Data == "div" {
-// 			for _, a := range n.Attr {
-// 				if a.Key == "class" && a.Val == "data" {
-// 					printText = true
-// 					break
-// 				}
-// 			}
-// 		}
-// 		for c := n.FirstChild; c != nil; c = c.NextSibling {
-// 			ff(c, printText)
-// 		}
-// 	}
-// 	ff(doc, false)
-// 	return goals
-// }
+func GetPlayerStat(name string) (*PlayerStat, error) {
+	// Load the HTML document (in real use, the type would be *goquery.Document)
+	var statDoc, overviewDoc *Document
+	var e error
+
+	splitName := strings.Split(name, "-")
+	fmt.Println(splitName)
+	firstName := splitName[0]
+	lastName := splitName[1]
+
+	if statDoc, e = NewDocument("http://www.premierleague.com/en-gb/players/profile.statistics.html/" + firstName + "-" + lastName); e != nil {
+		panic(e.Error())
+	}
+
+	if overviewDoc, e = NewDocument("http://www.premierleague.com/en-gb/players/profile.overview.html/" + firstName + "-" + lastName); e != nil {
+		panic(e.Error())
+	}
+
+	// general
+	club := overviewDoc.Find(".stats li").Eq(0).Find("p").Text()
+	position := Captialize(strings.ToLower(overviewDoc.Find(".stats li").Eq(1).Find("p").Text()))
+	dob := overviewDoc.Find(".contentTable .normal").Eq(0).Text()
+	height := overviewDoc.Find(".contentTable .normal").Eq(1).Text()
+	age, _ := strconv.ParseInt(overviewDoc.Find(".contentTable .normal").Eq(2).Text(), 10, 0)
+	weight := overviewDoc.Find(".contentTable .normal").Eq(3).Text()
+	national, _ := overviewDoc.Find(".contentTable .normal").Eq(5).Find("img").Attr("title")
+
+	// attacking
+	goals, _ := strconv.ParseInt(statDoc.Find("#clubsTabsAttacking li[name='goals'] .data").Text(), 10, 0)
+	shots, _ := strconv.ParseInt(statDoc.Find("#clubsTabsAttacking li[name='shots'] .data").Text(), 10, 0)
+	penalties, _ := strconv.ParseInt(statDoc.Find("#clubsTabsAttacking li[name='penalties'] .data").Text(), 10, 0)
+	assists, _ := strconv.ParseInt(statDoc.Find("#clubsTabsAttacking li[name='assists'] .data").Text(), 10, 0)
+	crosses, _ := strconv.ParseInt(statDoc.Find("#clubsTabsAttacking li[name='crosses'] .data").Text(), 10, 0)
+	offsides, _ := strconv.ParseInt(statDoc.Find("#clubsTabsAttacking li[name='offsides'] .data").Text(), 10, 0)
+
+	// defending
+	savesMade, _ := strconv.ParseInt(statDoc.Find("#clubsTabsDefending li[name='savesMade'] .data").Text(), 10, 0)
+	ownGoals, _ := strconv.ParseInt(statDoc.Find("#clubsTabsDefending li[name='ownGoals'] .data").Text(), 10, 0)
+	cleanSheets, _ := strconv.ParseInt(statDoc.Find("#clubsTabsDefending li[name='cleanSheets'] .data").Text(), 10, 0)
+	blocks, _ := strconv.ParseInt(statDoc.Find("#clubsTabsDefending li[name='blocks'] .data").Text(), 10, 0)
+	clearances, _ := strconv.ParseInt(statDoc.Find("#clubsTabsDefending li[name='clearances'] .data").Text(), 10, 0)
+
+	// disciplinary
+	fouls, _ := strconv.ParseInt(statDoc.Find("#clubsTabsDisciplinary li[name='fouls'] .data").Text(), 10, 0)
+	cards, _ := strconv.ParseInt(statDoc.Find("#clubsTabsDisciplinary li[name='cards'] .data").Text(), 10, 0)
+
+	fmt.Println(goals, shots, penalties, assists, crosses, offsides, savesMade, ownGoals, cleanSheets, blocks, clearances, fouls, cards)
+
+	playerStat := &PlayerStat{
+		Club:        club,
+		Position:    position,
+		Dob:         dob,
+		Height:      height,
+		Age:         age,
+		Weight:      weight,
+		National:    national,
+		Goals:       goals,
+		Shots:       shots,
+		Penalties:   penalties,
+		Assists:     assists,
+		Crosses:     crosses,
+		Offsides:    offsides,
+		SavesMade:   savesMade,
+		OwnGoals:    ownGoals,
+		CleanSheets: cleanSheets,
+		Blocks:      blocks,
+		Clearances:  clearances,
+		Fouls:       fouls,
+		Cards:       cards}
+
+	return playerStat, nil
+}
+
+func Captialize(str string) string {
+	letters := []rune(str)
+	letters[0] = unicode.ToUpper(letters[0])
+	cappedStr := string(letters)
+	return cappedStr
+}

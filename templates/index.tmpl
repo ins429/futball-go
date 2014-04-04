@@ -9,31 +9,16 @@
     <script type="text/javascript" src="js/app.js"></script>
     <script type="text/javascript" src="js/services/api.js"></script>
     <script type="text/javascript" src="js/controllers/users.js"></script>
-    <script type="text/javascript" src="js/controllers/images.js"></script>
+    <script type="text/javascript" src="js/controllers/cards.js"></script>
   </head>
-  <body ng-app="futball-gifs">
-    <header ng-controller="Users" ng-init="initUser()">
-      <div class="user-menu-box float-right">
-        <div class="user-menu-box-list">
-          <button class="button" ng-click="signIn()" ng-if="!user"><i class="fa fa-facebook-square"></i>Sign in</button>
-          <button class="button float-right" ng-if="user" ng-click="toggleUserMenu()"><i class="fa fa-user" style="margin:0"></i></button>
-        </div>
-        <div ng-show="showUserMenu">
-          <div class="user-menu-box-list">
-            <h5>{{ user.first_name }} {{ user.last_name }}</h5>
-          </div>
-          <div class="user-menu-box-list">
-            <button class="button block float-right" ng-if="user" ng-click="editUser()"><i class="fa fa-edit"></i>Edit</button>
-          </div>
-          <div class="user-menu-box-list">
-            <button class="button block float-right" ng-if="user" ng-click="signOut()"><i class="fa fa-sign-out"></i>Sign out</button>
-          </div>
-        </div>
+  <body ng-app="futball-cards">
+    <section class="wrapper" ng-controller="Cards" ng-init="initCards()">
+      <input type="text" ng-model="playerName">
+      <button class="button" ng-click="getCards()">Query</button>
+
+      <div ng-repeat="card in cards" class="card-wrapper">
+        <pre style="word-wrap: break-word;">{{ card }}</pre>
       </div>
-      <ng-include src="formUrl">
-      </ng-include>
-    </header>
-    <section ng-view>
     </section>
   </body>
 </html>

@@ -1,6 +1,6 @@
 'use strict';
 
-var app = angular.module('futball-gifs', ['ngRoute', 'angularFileUpload']);
+var app = angular.module('futball-cards', ['ngRoute', 'angularFileUpload']);
 
 app.run(['$rootScope', '$window', function($rootScope, $window) {
   $window.fbAsyncInit = function() {
@@ -20,7 +20,6 @@ app.run(['$rootScope', '$window', function($rootScope, $window) {
     js.src = "//connect.facebook.net/en_US/all.js";
     ref.parentNode.insertBefore(js, ref);
   }(document));
-  console.log('hi')
 }]);
 
 app.config(function ($routeProvider, $locationProvider) {

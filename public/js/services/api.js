@@ -1,5 +1,13 @@
 app.service('api', function($http, $upload) {
   return {
+    queryCards: function(query) {
+      var data = $http({method: 'GET', params: query, url: '/players/' + query.name}).then(function(resp){
+        return resp.data;
+      });
+
+      return data;
+    },
+
     queryImages: function(query) {
       var data = $http({method: 'GET', params: query, url: '/images/query.json'}).then(function(resp){
         return resp.data;
