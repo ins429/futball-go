@@ -2,7 +2,7 @@
   <div id="images-controller-header">
     <button ng-if="user" class="button float-left" ng-click="newImage()">New</button>
     <div class="float-right">
-      <i class="fa fa-search"></i><input type="text" id="search" ng-model="searchValue"/>
+      <i class="fa fa-search"></i><input type="text" id="search" ng-model="searchValue" ng-enter="getCards()"/>
       <button class="button" ng-click="searchImages(searchValue)">Search</button>
     </div>
     <div class="clear"></div>

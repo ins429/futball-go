@@ -23,12 +23,24 @@ app.run(['$rootScope', '$window', function($rootScope, $window) {
 }]);
 
 app.config(function ($routeProvider, $locationProvider) {
-  $routeProvider.when('/',
-    {
-      templateUrl: '/views/images/index.html',
-      controller: 'Images'
-    }
-  );
-
+  $routeProvider.when('/', {
+    templateUrl: '/views/cards.html',
+    controller: 'Cards'
+  });
+  
   $locationProvider.html5Mode(true);
+});
+
+// directives
+app.directive('ngEnter', function () {
+  return function (scope, element, attrs) {
+    element.bind("keydown keypress", function (event) {
+      if(event.which === 13) {
+        scope.$apply(function (){
+          scope.$eval(attrs.ngEnter);
+        });
+          event.preventDefault();
+      }
+    });
+  };
 });

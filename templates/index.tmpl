@@ -12,13 +12,7 @@
     <script type="text/javascript" src="js/controllers/cards.js"></script>
   </head>
   <body ng-app="futball-cards">
-    <section class="wrapper" ng-controller="Cards" ng-init="initCards()">
-      <input type="text" ng-model="playerName">
-      <button class="button" ng-click="getCards()">Query</button>
-
-      <div ng-repeat="card in cards" class="card-wrapper">
-        <pre style="word-wrap: break-word;">{{ card }}</pre>
-      </div>
+    <section ng-view>
     </section>
   </body>
 </html>

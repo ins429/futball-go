@@ -23,6 +23,43 @@ CREATE TABLE cards (
   updated_at DATE
 );
 
+CREATE TABLE players (
+  id          SERIAL,
+  nameAlias   TEXT,
+  name        TEXT,
+  club        TEXT,
+  position    TEXT,
+  appearances TEXT,
+  goals       NUMERIC,
+  shots       NUMERIC,
+  penalties   NUMERIC,
+  assists     NUMERIC,
+  crosses     NUMERIC,
+  offsides    NUMERIC,
+  savesMade   NUMERIC,
+  ownGoals    NUMERIC,
+  cleanSheets NUMERIC,
+  blocks      NUMERIC,
+  clearances  NUMERIC,
+  fouls       NUMERIC,
+  cards       NUMERIC,
+  dob         TEXT,
+  height      TEXT,
+  age         NUMERIC,
+  weight      TEXT,
+  national    TEXT
+);
+
 ALTER TABLE users ADD id SERIAL;
 
 curl -d "email=ins429@gmail.com&password=pass" "localhost:8080/signup"
+
+
+https://code.google.com/p/go/source/browse/html/?repo=net
+https://godoc.org/code.google.com/p/go.net/html#Attribute
+
+select distinct on nameAlias from players;
+
+
+너드트리 -> 파일
+ctrl-ww

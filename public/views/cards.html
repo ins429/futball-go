@@ -1,27 +1,40 @@
 <section class="wrapper" ng-controller="Cards" ng-init="initCards()">
-  <div id="cards-controller-header"><button class="button" ng-click="addCard()">Add</button></div>
-  <div class="cards-wrapper">
-    <div ng-repeat="card in cards" class="card-wrapper">
-      <div class="card">
-        <div class="card-header">
-          <h3>{{ card.name }}</h3>
-        </div>
-        <div class="card-box no-selection">
-          <img ng-src="{{ card.urls.original }}" ng-if="card.urls" class="center" />
-          <img ng-src="{{ card.url }}" ng-if="card.url" class="center" />
-        </div>
-        <div class="tags-wrapper">
-          <ul ng-if="card.tags">
-            <li ng-repeat="tag in card.tags">{{ tag }}</li>
-          </ul>
-        </div>
-        <div class="cud no-selection">
-          <div class="cud-buttons">
-            <button class="button" ng-click="editCard(card)"><i class="fa fa-pencil-square-o"></i>Edit</button>
-            <button class="button" ng-click="deleteCard(card.id)"><i class="fa fa-trash-o"></i>Delete</button>
-          </div>
-        </div>
-      </div>
-    </div>
+<input id="player-name" type="text" ng-model="playerName" ng-enter="getCards()">
+<button class="button" ng-click="getCards()">Search</button>
+<div id="players-list">
+  <ul>
+    <li ng-repeat="playerAlias in players | filter:playerName">{{ playerAlias }}</li>
+  </ul>
+</div>
+
+<div ng-repeat="player in cards" class="card-wrapper">
+  <div class="card">
+    <h1>{{ player.name }}</h1>
+    <a href="#">
+      <img src="http://www.placehold.it/500x200" />
+    </a>
+    <div><label>Club: </label><span>{{ player.club }}</span></div>
+    <div><label>Position: </label><span>{{ player.position }}</span></div>
+    <div><label>Appearances: </label><span>{{ player.appearances }}</span></div>
+    <div><label>Goals: </label><span>{{ player.goals }}</span></div>
+    <div><label>Shots: </label><span>{{ player.shots }}</span></div>
+    <div><label>Penalties: </label><span>{{ player.penalties }}</span></div>
+    <div><label>Assists: </label><span>{{ player.assists }}</span></div>
+    <div><label>Crosses: </label><span>{{ player.crosses }}</span></div>
+    <div><label>Offsides: </label><span>{{ player.offsides }}</span></div>
+    <div><label>SavesMade: </label><span>{{ player.savesMade }}</span></div>
+    <div><label>OwnGoals: </label><span>{{ player.ownGoals }}</span></div>
+    <div><label>CleanSheets: </label><span>{{ player.ownGoals }}</span></div>
+    <div><label>Blocks: </label><span>{{ player.blocks }}</span></div>
+    <div><label>Clearances: </label><span>{{ player.clearances }}</span></div>
+    <div><label>Fouls: </label><span>{{ player.fouls }}</span></div>
+    <div><label>Cards: </label><span>{{ player.cards }}</span></div>
+    <div><label>Dob: </label><span>{{ player.dob }}</span></div>
+    <div><label>Height: </label><span>{{ player.height }}</span></div>
+    <div><label>Age: </label><span>{{ player.age }}</span></div>
+    <div><label>Weight: </label><span>{{ player.wegiht }}</span></div>
+    <div><label>National: </label><span>{{ player.national }}</span></div>
   </div>
+</div>
 </section>
+

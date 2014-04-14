@@ -1,28 +1,18 @@
 package main
 
 import (
+	"code.google.com/p/go.crypto/bcrypt"
 	"database/sql"
 	"fmt"
 	"github.com/codegangsta/martini"
-	"github.com/codegangsta/martini-contrib/binding"
 	"github.com/codegangsta/martini-contrib/render"
-	"github.com/gorilla/sessions"
+	"github.com/codegangsta/martini-contrib/sessions"
 	_ "github.com/lib/pq"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
-
-	"strings"
-	"unicode"
-
-	// goquery
-	. "github.com/PuerkitoBio/goquery"
-
-	// for password
-	"code.google.com/p/go.crypto/bcrypt"
-	// "time"
 )
 
 type Card struct {
@@ -30,7 +20,7 @@ type Card struct {
 	Name string `json:"name"`
 }
 
-type ErrorResponse struct {
+type GeneralResponse struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
@@ -63,14 +53,15 @@ func main() {
 		Delims: render.Delims{"{[{", "}]}"},
 	}))
 
+	store := sessions.NewCookieStore([]byte("ins429"))
+	m.Use(sessions.Sessions("peter", store))
+
 	m.Get("/", func(params martini.Params, r render.Render) {
 		r.HTML(200, "index", nil)
 	})
 
 	// query cards
-	m.Get("/cards", func(params martini.Params, r render.Render, w http.ResponseWriter, req *http.Request) {
-		checkSession(req, w)
-
+	m.Get("/cards", func(params martini.Params, r render.Render, rw http.ResponseWriter, req *http.Request) {
 		limit, _ := strconv.ParseInt(req.URL.Query().Get("limit"), 10, 0)
 		skip, _ := strconv.ParseInt(req.URL.Query().Get("skip"), 10, 0)
 
@@ -136,9 +127,10 @@ func main() {
 	})
 
 	// user login
-	m.Post("/login", binding.Form(UserForm{}), func(userForm UserForm, r render.Render, w http.ResponseWriter, req *http.Request) {
+	m.Post("/login", func(r render.Render, rw http.ResponseWriter, req *http.Request, s sessions.Session) {
+		email, password := req.FormValue("email"), req.FormValue("password")
 
-		rows, _ := db.Query("SELECT id, email, encrypted_password FROM users WHERE email = $1", userForm.Email)
+		rows, _ := db.Query("SELECT id, email, encrypted_password FROM users WHERE email = $1", email)
 		var u User
 		for rows.Next() {
 			err = rows.Scan(&u.Id, &u.Email, &u.password)
@@ -147,71 +139,78 @@ func main() {
 			}
 		}
 
-		pass := []byte(userForm.Password)
+		pass := []byte(password)
 		upass := []byte(u.password)
 
-		fmt.Println(bcrypt.CompareHashAndPassword(upass, pass))
-
 		if bcrypt.CompareHashAndPassword(upass, pass) == nil {
-			saveSession(req, w, u.Id)
+			s.Set("userId", u.Id)
 			r.JSON(200, u)
 		} else {
-			r.JSON(400, &ErrorResponse{
+			r.JSON(400, &GeneralResponse{
 				Code:    400,
 				Message: "Failed to login!"})
 		}
 	})
 
 	// user signup
-	m.Post("/signup", binding.Form(UserForm{}), func(userForm UserForm, r render.Render) {
-		pass := []byte(userForm.Password)
+	m.Post("/signup", func(r render.Render, req *http.Request) {
+		email, password := req.FormValue("email"), req.FormValue("password")
+		pass := []byte(password)
 		p, err := bcrypt.GenerateFromPassword(pass, bcrypt.DefaultCost)
 		if err != nil {
-			fmt.Println(pass)
-			fmt.Println(userForm.Password)
-			fmt.Println(err)
-			fmt.Println("umm.. error on GenerateFromPassword")
 			return
 		}
 
-		_, err = db.Exec("INSERT INTO users (email, encrypted_password) VALUES ($1, $2)", userForm.Email, p)
+		_, err = db.Exec("INSERT INTO users (email, encrypted_password) VALUES ($1, $2)", email, p)
 		if err != nil {
 			fmt.Println("Insert error", err)
-			r.JSON(500, userForm)
+			r.JSON(500, &GeneralResponse{
+				Code:    500,
+				Message: "Failed to signup!"})
 			return
 		}
 
-		r.JSON(200, userForm)
+		r.JSON(200, &GeneralResponse{
+			Code:    200,
+			Message: "Successfully sign up!"})
 	})
 
-	m.Post("/cards", func(w http.ResponseWriter, r *http.Request) {
+	m.Post("/cards", func(rw http.ResponseWriter, r *http.Request) {
 		file, header, err := r.FormFile("file")
 		defer file.Close()
 
 		if err != nil {
-			fmt.Fprintln(w, err)
+			fmt.Fprintln(rw, err)
 			return
 		}
 
 		out, err := os.Create("/tmp/file")
 		if err != nil {
-			fmt.Fprintf(w, "Failed to open the file for writing")
+			fmt.Fprintf(rw, "Failed to open the file for writing")
 			return
 		}
 		defer out.Close()
 		_, err = io.Copy(out, file)
 		if err != nil {
-			fmt.Fprintln(w, err)
+			fmt.Fprintln(rw, err)
 		}
 
 		// the header contains useful info, like the original file name
-		fmt.Fprintf(w, "File %s uploaded successfully.", header.Filename)
+		fmt.Fprintf(rw, "File %s uploaded successfully.", header.Filename)
 	})
 
-	m.Get("/showme", func(params martini.Params, r render.Render, w http.ResponseWriter, req *http.Request) {
-		checkSession(req, w)
+	m.Get("/showme", func(params martini.Params, r render.Render, rw http.ResponseWriter, req *http.Request, s sessions.Session) {
+		user := &User{}
+		err := db.QueryRow("SELECT id, email from users where id=$1", s.Get("userId")).Scan(&user.Id, &user.Email)
 
-		r.JSON(200, UserForm{})
+		if err != nil {
+			r.JSON(400, &GeneralResponse{
+				Code:    400,
+				Message: "Failed to look up!"})
+			return
+		}
+
+		r.JSON(200, user)
 	})
 
 	m.Get("/players/:name", func(params martini.Params, r render.Render) {
@@ -229,193 +228,4 @@ func main() {
 
 	http.ListenAndServe(":8080", m)
 	m.Run()
-}
-
-func checkSession(req *http.Request, rsp http.ResponseWriter) {
-	store := NewPGStore("user=ins429 dbname=fcards sslmode=disable", []byte("something-very-secret"))
-
-	defer store.Close()
-
-	// Get a session.
-	session, err := store.Get(req, "session-key")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(session)
-
-	fmt.Println(session.Values["user_id"])
-	// Add a value.
-	// session.Values["user_id"] = "1"
-
-	// Save.
-	if err = sessions.Save(req, rsp); err != nil {
-		fmt.Println(err)
-		log.Fatalf("Error saving session: %v", err)
-	}
-
-	// Delete session.
-	// session.Options.MaxAge = -1
-	// if err = sessions.Save(req, rsp); err != nil {
-	// 	fmt.Println(err)
-	// 	log.Fatalf("Error saving session: %v", err)
-	// }
-}
-
-func isUserLogged(req *http.Request, rsp http.ResponseWriter) bool {
-	store := NewPGStore("user=ins429 dbname=fcards sslmode=disable", []byte("something-very-secret"))
-
-	defer store.Close()
-
-	// Get a session.
-	session, err := store.Get(req, "session-key")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(session)
-
-	fmt.Println(session.Values["user_id"])
-	// Add a value.
-	// session.Values["user_id"] = "1"
-
-	// Save.
-	if err = sessions.Save(req, rsp); err != nil {
-		fmt.Println(err)
-		log.Fatalf("Error saving session: %v", err)
-	}
-
-	return session.Values["user_id"] != nil
-}
-
-func saveSession(req *http.Request, rsp http.ResponseWriter, userId int64) {
-	store := NewPGStore("user=ins429 dbname=fcards sslmode=disable", []byte("something-very-secret"))
-
-	defer store.Close()
-
-	// Get a session.
-	session, err := store.Get(req, "session-key")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(session)
-
-	fmt.Println(session.Values["user_id"])
-	// Add a value.
-	session.Values["user_id"] = userId
-
-	// Save.
-	if err = sessions.Save(req, rsp); err != nil {
-		fmt.Println(err)
-		log.Fatalf("Error saving session: %v", err)
-	}
-}
-
-type PlayerStatsResponse struct {
-	Code  int          `json:"code"`
-	Stats []PlayerStat `json:"stats"`
-}
-
-type PlayerStat struct {
-	Club        string `json:"club"`
-	Position    string `json:"position"`
-	Goals       int64  `json:"goals"`
-	Shots       int64  `json:"shots"`
-	Penalties   int64  `json:"penalties"`
-	Assists     int64  `json:"assists"`
-	Crosses     int64  `json:"crosses"`
-	Offsides    int64  `json:"offsides"`
-	SavesMade   int64  `json:"savesMade"`
-	OwnGoals    int64  `json:"ownGoals"`
-	CleanSheets int64  `json:"cleanSheets"`
-	Blocks      int64  `json:"blocks"`
-	Clearances  int64  `json:"clearances"`
-	Fouls       int64  `json:"fouls"`
-	Cards       int64  `json:"cards"`
-	Dob         string `json:"dob"`
-	Height      string `json:"height"`
-	Age         int64  `json:"age"`
-	Weight      string `json:"weight"`
-	National    string `json:"national"`
-}
-
-func GetPlayerStat(name string) (*PlayerStat, error) {
-	// Load the HTML document (in real use, the type would be *goquery.Document)
-	var statDoc, overviewDoc *Document
-	var e error
-
-	splitName := strings.Split(name, "-")
-	fmt.Println(splitName)
-	firstName := splitName[0]
-	lastName := splitName[1]
-
-	if statDoc, e = NewDocument("http://www.premierleague.com/en-gb/players/profile.statistics.html/" + firstName + "-" + lastName); e != nil {
-		panic(e.Error())
-	}
-
-	if overviewDoc, e = NewDocument("http://www.premierleague.com/en-gb/players/profile.overview.html/" + firstName + "-" + lastName); e != nil {
-		panic(e.Error())
-	}
-
-	// general
-	club := overviewDoc.Find(".stats li").Eq(0).Find("p").Text()
-	position := Captialize(strings.ToLower(overviewDoc.Find(".stats li").Eq(1).Find("p").Text()))
-	dob := overviewDoc.Find(".contentTable .normal").Eq(0).Text()
-	height := overviewDoc.Find(".contentTable .normal").Eq(1).Text()
-	age, _ := strconv.ParseInt(overviewDoc.Find(".contentTable .normal").Eq(2).Text(), 10, 0)
-	weight := overviewDoc.Find(".contentTable .normal").Eq(3).Text()
-	national, _ := overviewDoc.Find(".contentTable .normal").Eq(5).Find("img").Attr("title")
-
-	// attacking
-	goals, _ := strconv.ParseInt(statDoc.Find("#clubsTabsAttacking li[name='goals'] .data").Text(), 10, 0)
-	shots, _ := strconv.ParseInt(statDoc.Find("#clubsTabsAttacking li[name='shots'] .data").Text(), 10, 0)
-	penalties, _ := strconv.ParseInt(statDoc.Find("#clubsTabsAttacking li[name='penalties'] .data").Text(), 10, 0)
-	assists, _ := strconv.ParseInt(statDoc.Find("#clubsTabsAttacking li[name='assists'] .data").Text(), 10, 0)
-	crosses, _ := strconv.ParseInt(statDoc.Find("#clubsTabsAttacking li[name='crosses'] .data").Text(), 10, 0)
-	offsides, _ := strconv.ParseInt(statDoc.Find("#clubsTabsAttacking li[name='offsides'] .data").Text(), 10, 0)
-
-	// defending
-	savesMade, _ := strconv.ParseInt(statDoc.Find("#clubsTabsDefending li[name='savesMade'] .data").Text(), 10, 0)
-	ownGoals, _ := strconv.ParseInt(statDoc.Find("#clubsTabsDefending li[name='ownGoals'] .data").Text(), 10, 0)
-	cleanSheets, _ := strconv.ParseInt(statDoc.Find("#clubsTabsDefending li[name='cleanSheets'] .data").Text(), 10, 0)
-	blocks, _ := strconv.ParseInt(statDoc.Find("#clubsTabsDefending li[name='blocks'] .data").Text(), 10, 0)
-	clearances, _ := strconv.ParseInt(statDoc.Find("#clubsTabsDefending li[name='clearances'] .data").Text(), 10, 0)
-
-	// disciplinary
-	fouls, _ := strconv.ParseInt(statDoc.Find("#clubsTabsDisciplinary li[name='fouls'] .data").Text(), 10, 0)
-	cards, _ := strconv.ParseInt(statDoc.Find("#clubsTabsDisciplinary li[name='cards'] .data").Text(), 10, 0)
-
-	fmt.Println(goals, shots, penalties, assists, crosses, offsides, savesMade, ownGoals, cleanSheets, blocks, clearances, fouls, cards)
-
-	playerStat := &PlayerStat{
-		Club:        club,
-		Position:    position,
-		Dob:         dob,
-		Height:      height,
-		Age:         age,
-		Weight:      weight,
-		National:    national,
-		Goals:       goals,
-		Shots:       shots,
-		Penalties:   penalties,
-		Assists:     assists,
-		Crosses:     crosses,
-		Offsides:    offsides,
-		SavesMade:   savesMade,
-		OwnGoals:    ownGoals,
-		CleanSheets: cleanSheets,
-		Blocks:      blocks,
-		Clearances:  clearances,
-		Fouls:       fouls,
-		Cards:       cards}
-
-	return playerStat, nil
-}
-
-func Captialize(str string) string {
-	letters := []rune(str)
-	letters[0] = unicode.ToUpper(letters[0])
-	cappedStr := string(letters)
-	return cappedStr
 }
