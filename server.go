@@ -130,6 +130,7 @@ func main() {
 	m.Post("/login", func(r render.Render, rw http.ResponseWriter, req *http.Request, s sessions.Session) {
 		email, password := req.FormValue("email"), req.FormValue("password")
 
+    fmt.Println(email, password)
 		rows, _ := db.Query("SELECT id, email, encrypted_password FROM users WHERE email = $1", email)
 		var u User
 		for rows.Next() {

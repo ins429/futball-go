@@ -1,28 +1,16 @@
 app.controller('Users', function MainCtrl($rootScope, $scope, $route, api) {
-  $scope.initUser = function(user) {
-    $scope.fbLoggedUser = null;
-    $rootScope.user = user;
-    $scope.showUserMenu = false;
-    $scope.userData = {};
-    $scope.showUserForm = false;
-    $scope.formUrl = '/views/users/form.html';
+  $scope.initUsers = function() {
+    $scope.userForm = {};
   }
 
-  $scope.signIn = function() {
-    $scope.showUserMenu = false;
-
-    FB.login(function(response) {
-      if (response.authResponse) {
-        api.fbLogin({
-          token: response.authResponse.accessToken
-        }).then(function(data) {
-          $rootScope.user = data;
-        });
-      } else {
-        // fix me handle error for fb auth
-      }
+  $scope.login = function() {
+    api.login({
+      email: $scope.userForm.email,
+      password: $scope.userForm.password
+    }).then(function(data) {
+      console.log(data)
+      $rootScope.user = data;
     });
-
   };
 
   // pop form to edit an image

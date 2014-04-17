@@ -37,4 +37,13 @@
   </div>
 </div>
 </section>
-
+<section ng-controller="Users" ng-init="initUsers()">
+  <input type="text" ng-model="userForm.email">
+  <input type="password" ng-model="userForm.password">
+  <button class="button" ng-click="login()">Login<button>
+  <form action="/login" method="post">
+    <input type="text" name="email">
+    <input type="password" name="password">
+    <input type="submit">
+  </form>
+</section>
