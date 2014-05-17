@@ -1,49 +1,10 @@
-<section class="wrapper" ng-controller="Cards" ng-init="initCards()">
-<input id="player-name" type="text" ng-model="playerName" ng-enter="getCards()">
-<button class="button" ng-click="getCards()">Search</button>
-<div id="players-list">
-  <ul>
-    <li ng-repeat="playerAlias in players | filter:playerName">{{ playerAlias }}</li>
-  </ul>
-</div>
-
-<div ng-repeat="player in cards" class="card-wrapper">
-  <div class="card">
-    <h1>{{ player.name }}</h1>
-    <a href="#">
-      <img src="http://www.placehold.it/500x200" />
-    </a>
-    <div><label>Club: </label><span>{{ player.club }}</span></div>
-    <div><label>Position: </label><span>{{ player.position }}</span></div>
-    <div><label>Appearances: </label><span>{{ player.appearances }}</span></div>
-    <div><label>Goals: </label><span>{{ player.goals }}</span></div>
-    <div><label>Shots: </label><span>{{ player.shots }}</span></div>
-    <div><label>Penalties: </label><span>{{ player.penalties }}</span></div>
-    <div><label>Assists: </label><span>{{ player.assists }}</span></div>
-    <div><label>Crosses: </label><span>{{ player.crosses }}</span></div>
-    <div><label>Offsides: </label><span>{{ player.offsides }}</span></div>
-    <div><label>SavesMade: </label><span>{{ player.savesMade }}</span></div>
-    <div><label>OwnGoals: </label><span>{{ player.ownGoals }}</span></div>
-    <div><label>CleanSheets: </label><span>{{ player.ownGoals }}</span></div>
-    <div><label>Blocks: </label><span>{{ player.blocks }}</span></div>
-    <div><label>Clearances: </label><span>{{ player.clearances }}</span></div>
-    <div><label>Fouls: </label><span>{{ player.fouls }}</span></div>
-    <div><label>Cards: </label><span>{{ player.cards }}</span></div>
-    <div><label>Dob: </label><span>{{ player.dob }}</span></div>
-    <div><label>Height: </label><span>{{ player.height }}</span></div>
-    <div><label>Age: </label><span>{{ player.age }}</span></div>
-    <div><label>Weight: </label><span>{{ player.wegiht }}</span></div>
-    <div><label>National: </label><span>{{ player.national }}</span></div>
+<section ng-controller="Cards" ng-init="initCards()">
+  <input id="player-name" type="text" ng-model="playerName" ng-enter="getCards()">
+  <button class="button" ng-click="getCards()">Search</button>
+  <div id="players-list">
+    <ul>
+      <li ng-repeat="playerAlias in players | filter:playerName">{{ playerAlias }}</li>
+    </ul>
   </div>
-</div>
-</section>
-<section ng-controller="Users" ng-init="initUsers()">
-  <input type="text" ng-model="userForm.email">
-  <input type="password" ng-model="userForm.password">
-  <button class="button" ng-click="login()">Login<button>
-  <form action="/login" method="post">
-    <input type="text" name="email">
-    <input type="password" name="password">
-    <input type="submit">
-  </form>
+  <cards cards="cards"></cards>
 </section>

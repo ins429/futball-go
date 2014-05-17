@@ -2,17 +2,36 @@
   <head>
     <title>futball</title>
     <link href="css/styles.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Lato:400,300' rel='stylesheet' type='text/css'>
     <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <script src="http://fb.me/react-0.10.0.js"></script>
+    <script src="js/JSXTransformer.js"></script>
     <script type="text/javascript" src="js/angular.min.js"></script>
     <script type="text/javascript" src="js/angular-route.min.js"></script>
     <script type="text/javascript" src="js/angular-file-upload.min.js"></script>
     <script type="text/javascript" src="js/app.js"></script>
+    <script type="text/jsx" src="js/cards.js"></script>
     <script type="text/javascript" src="js/services/api.js"></script>
     <script type="text/javascript" src="js/controllers/users.js"></script>
     <script type="text/javascript" src="js/controllers/cards.js"></script>
   </head>
   <body ng-app="futball-cards">
-    <section ng-view>
+    {{ flash }}
+    <section class="pusher" ng-click="toggleMenu($event)">
+      <nav class="menu" ng-controller="Users" ng-init="initUser()">
+        <ul ng-if="user">
+          <li><i class="fa fa-user"></i>&nbsp;{{ user.firstname }}&nbsp;{{ user.lastname}}</li>
+          <li ng-click="logout()"><i class="fa fa-sign-out"></i>&nbsp;Logout</li>
+        </ul>
+        <ul ng-if="!user">
+          <li ng-click="login()"><i class="fa fa-sign-in"></i>&nbsp;Login</li>
+          <li ng-click="fbLogin()"><i class="fa fa-sign-in"></i>&nbsp;fbLogin</li>
+          <li ng-click="fbSignup()"><i class="fa fa-sign-out"></i>&nbsp;fbSignup</li>
+        </ul>
+      </nav>
+      <i class="menu-trigger fa fa-bars"></i>
+      <section class="wrapper" ng-view>
+      </section>
     </section>
   </body>
 </html>

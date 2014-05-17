@@ -7,13 +7,14 @@ pg_ctl -D /usr/local/var/postgres -l /usr/local/var/postgres/server.log start
 
 CREATE TABLE users (
   id SERIAL,
-  email TEXT,
+  username TEXT,
   fb_id TEXT,
   firstname TEXT,
   lastname TEXT,
   encrypted_password TEXT,
   created_at DATE,
-  updated_at DATE
+  updated_at DATE,
+  players JSON[]
 );
 
 CREATE TABLE cards (
@@ -51,6 +52,7 @@ CREATE TABLE players (
 );
 
 ALTER TABLE users ADD id SERIAL;
+alter table users add players json[];
 
 curl -d "email=ins429@gmail.com&password=pass" "localhost:8080/signup"
 
@@ -60,6 +62,3 @@ https://godoc.org/code.google.com/p/go.net/html#Attribute
 
 select distinct on nameAlias from players;
 
-
-너드트리 -> 파일
-ctrl-ww

@@ -1,6 +1,6 @@
 app.service('api', function($http, $upload) {
   return {
-    queryCards: function(query) {
+    getCard: function(query) {
       var data = $http({method: 'GET', params: query, url: '/players/' + query.name}).then(function(resp){
         return resp.data;
       });
@@ -8,74 +8,48 @@ app.service('api', function($http, $upload) {
       return data;
     },
 
-    queryImages: function(query) {
-      var data = $http({method: 'GET', params: query, url: '/images/query.json'}).then(function(resp){
+    fbSignup: function(params) {
+      var user = $http({method: 'POST', url: '/fb_signup', data: params}).then(function(resp){
         return resp.data;
-      });
-
-      return data;
-    },
-
-    updateImage: function(params) {
-      var data = $http({method: 'PUT', params: params, url: '/images/update.json'}).then(function(resp){
-        return resp.data;
-      });
-
-      return data;
-    },
-
-    createImage: function(params, file) {
-      var data = $http({method: 'POST', params: params, url: '/images/create.json'}).then(function(resp){
-        return resp.data;
-      });
-
-      return data;
-    },
-
-    createImageWithFile: function(params, file) {
-      var data = $upload.upload({
-        method: 'POST',
-        data: params,
-        file: file,
-        url: '/images/create.json'
-      }).then(function(resp){
-        return resp.data;
-      });
-
-      return data;
-    },
-
-    updateImageWithFile: function(params, file) {
-      var data = $upload.upload({
-        method: 'PUT',
-        data: params,
-        file: file,
-        url: '/images/update.json'
-      }).then(function(resp){
-        return resp.data;
-      });
-
-      return data;
-    },
-
-    deleteImage: function(params) {
-      var data = $http({method: 'DELETE', params: params, url: '/images/delete.json'}).then(function(resp){
-        return resp.data;
-      });
-
-      return data;
-    },
-
-    fbLogin: function(params) {
-      var user = $http({method: 'POST', url: '/fb_login', data: params}).then(function(resp){
+      }, function(resp) {
         return resp.data;
       });
 
       return user;
     },
 
+    fbLogin: function(params) {
+      var user = $http({method: 'POST', url: '/fb_login', data: params}).then(function(resp){
+        return resp.data;
+      }, function(resp) {
+        return resp.data;
+      });
+
+      return user;
+    },
+
+    addCard: function(params) {
+      var result = $http({
+        method: 'PUT',
+        url: '/add_card',
+        data: params
+      }).then(function(resp){
+        return resp.data;
+      }, function(resp) {
+        return resp.data;
+      });
+
+      return result;
+    },
+
     login: function(params) {
-      var user = $http({method: 'POST', url: '/login', data: params}).then(function(resp){
+      var user = $http({
+        method: 'POST',
+        url: '/login',
+        data: params
+      }).then(function(resp){
+        return resp.data;
+      }, function(resp) {
         return resp.data;
       });
 
@@ -83,11 +57,13 @@ app.service('api', function($http, $upload) {
     },
 
     logout: function() {
-      var user = $http({method: 'DELETE', url: '/signout'}).then(function(resp){
+      var data = $http({method: 'DELETE', url: '/logout'}).then(function(resp){
+        return resp.data;
+      }, function(resp) {
         return resp.data;
       });
 
-      return user;
+      return data;
     },
 
     signup: function(params) {
@@ -100,20 +76,8 @@ app.service('api', function($http, $upload) {
 
     showMe: function() {
       var user = $http({method: 'GET', url: '/showme'}).then(function(resp){
-        if (resp && resp.code === 200) {
-          return resp.users[0];
-        } else {
-          return null;
-        }
-      });
-
-      return user;
-    },
-
-    updateUser: function(params) {
-      var user = $http({method: 'POST', url: '/users/update.json', data: params}).then(function(resp){
-        if (resp && resp.code === 200) {
-          return resp.data.users[0];
+        if (resp && resp.status === 200) {
+          return resp.data;
         } else {
           return null;
         }
@@ -121,6 +85,6 @@ app.service('api', function($http, $upload) {
 
       return user;
     }
-
   };
+
 });

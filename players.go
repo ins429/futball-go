@@ -11,15 +11,22 @@ import (
 )
 
 type PlayerStatsResponse struct {
-	Code  int          `json:"code"`
-	Stats []PlayerStat `json:"stats"`
+	Status int          `json:"status"`
+	Stats  []PlayerStat `json:"stats"`
 }
 
 type PlayerStat struct {
-	Name        string `json:"name"`
+	Name     string `json:"name"`
+	Club     string `json:"club"`
+	Position string `json:"position"`
+	Dob      string `json:"dob"`
+	Height   string `json:"height"`
+	Age      int64  `json:"age"`
+	Weight   string `json:"weight"`
+	National string `json:"national"`
+	Image    string `json:"image"`
+
 	NameAlias   string `json:"nameAlias"`
-	Club        string `json:"club"`
-	Position    string `json:"position"`
 	Appearances string `json:"appearances"`
 	Goals       int64  `json:"goals"`
 	Shots       int64  `json:"shots"`
@@ -34,11 +41,6 @@ type PlayerStat struct {
 	Clearances  int64  `json:"clearances"`
 	Fouls       int64  `json:"fouls"`
 	Cards       int64  `json:"cards"`
-	Dob         string `json:"dob"`
-	Height      string `json:"height"`
-	Age         int64  `json:"age"`
-	Weight      string `json:"weight"`
-	National    string `json:"national"`
 }
 
 func GetPlayerStat(nameAlias string) (*PlayerStat, error) {
@@ -47,15 +49,15 @@ func GetPlayerStat(nameAlias string) (*PlayerStat, error) {
 	var e error
 
 	if statDoc, e = NewDocument("http://www.premierleague.com/en-gb/players/profile.statistics.html/" + nameAlias); e != nil {
-		panic(e.Error())
+		return nil, e
 	}
 
 	if overviewDoc, e = NewDocument("http://www.premierleague.com/en-gb/players/profile.overview.html/" + nameAlias); e != nil {
-		panic(e.Error())
+		return nil, e
 	}
 
 	if careerDoc, e = NewDocument("http://www.premierleague.com/en-gb/players/profile.career-history.html/" + nameAlias); e != nil {
-		panic(e.Error())
+		return nil, e
 	}
 
 	// general
@@ -67,12 +69,13 @@ func GetPlayerStat(nameAlias string) (*PlayerStat, error) {
 	age, _ := strconv.ParseInt(overviewDoc.Find(".contentTable .normal").Eq(2).Text(), 10, 0)
 	weight := overviewDoc.Find(".contentTable .normal").Eq(3).Text()
 	national, _ := overviewDoc.Find(".contentTable .normal").Eq(5).Find("img").Attr("title")
+	image, _ := overviewDoc.Find(".herosection .heroimg").Attr("src")
 
 	appearances := strings.Replace(careerDoc.Find(".contentTable.stats").Eq(0).Find("tr:nth-child(2) td:nth-child(2)").Text(), "\t", "", -1)
 	appearances = strings.Replace(appearances, "\n", "", -1)
 	appearances = strings.Replace(appearances, " ", "", -1)
 
-  fmt.Println(appearances)
+	fmt.Println(appearances)
 
 	// attacking
 	goals, _ := strconv.ParseInt(statDoc.Find("#clubsTabsAttacking li[name='goals'] .data").Text(), 10, 0)
@@ -93,8 +96,6 @@ func GetPlayerStat(nameAlias string) (*PlayerStat, error) {
 	fouls, _ := strconv.ParseInt(statDoc.Find("#clubsTabsDisciplinary li[name='fouls'] .data").Text(), 10, 0)
 	cards, _ := strconv.ParseInt(statDoc.Find("#clubsTabsDisciplinary li[name='cards'] .data").Text(), 10, 0)
 
-	fmt.Println(goals, shots, penalties, assists, crosses, offsides, savesMade, ownGoals, cleanSheets, blocks, clearances, fouls, cards)
-
 	playerStat := &PlayerStat{
 		Name:        playerName,
 		NameAlias:   nameAlias,
@@ -103,6 +104,7 @@ func GetPlayerStat(nameAlias string) (*PlayerStat, error) {
 		Dob:         dob,
 		Height:      height,
 		Age:         age,
+		Image:       image,
 		Appearances: appearances,
 		Weight:      weight,
 		National:    national,

@@ -3,8 +3,10 @@ package main
 import (
 	"code.google.com/p/go.crypto/bcrypt"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/codegangsta/martini"
+	"github.com/codegangsta/martini-contrib/binding"
 	"github.com/codegangsta/martini-contrib/render"
 	"github.com/codegangsta/martini-contrib/sessions"
 	_ "github.com/lib/pq"
@@ -21,24 +23,17 @@ type Card struct {
 }
 
 type GeneralResponse struct {
-	Code    int    `json:"code"`
+	Status  int    `json:"status"`
 	Message string `json:"message"`
 }
 
 type CardResponse struct {
-	Code  int    `json:"code"`
-	Cards []Card `json:"cards"`
+	Status int    `json:"status"`
+	Cards  []Card `json:"cards"`
 }
 
-type UserForm struct {
-	Email    string `form:"email"`
-	Password string `form:"password"`
-}
-
-type User struct {
-	Id       int64  `json:"id"`
-	Email    string `json:"email"`
-	password string `json:"password"`
+type AddCardForm struct {
+	Players []string `json:"players"`
 }
 
 func main() {
@@ -91,8 +86,8 @@ func main() {
 
 		// build response for cards
 		res := &CardResponse{
-			Code:  200,
-			Cards: cards}
+			Status: 200,
+			Cards:  cards}
 
 		r.JSON(200, res)
 	})
@@ -120,59 +115,71 @@ func main() {
 
 		// build response for cards
 		res := &CardResponse{
-			Code:  200,
-			Cards: cards}
+			Status: 200,
+			Cards:  cards}
 
 		r.JSON(200, res)
 	})
 
 	// user login
-	m.Post("/login", func(r render.Render, rw http.ResponseWriter, req *http.Request, s sessions.Session) {
-		email, password := req.FormValue("email"), req.FormValue("password")
-
-    fmt.Println(email, password)
-		rows, _ := db.Query("SELECT id, email, encrypted_password FROM users WHERE email = $1", email)
+	m.Post("/login", binding.Bind(UserForm{}), func(r render.Render, rw http.ResponseWriter, req *http.Request, s sessions.Session, userForm UserForm) {
+		rows, _ := db.Query("SELECT id, username, encrypted_password FROM users WHERE username = $1", userForm.Username)
 		var u User
 		for rows.Next() {
-			err = rows.Scan(&u.Id, &u.Email, &u.password)
+			err = rows.Scan(&u.Id, &u.Username, &u.Password)
 			if err != nil {
 				fmt.Println("Scan: ", err)
+
+				r.JSON(400, &GeneralResponse{
+					Status:  400,
+					Message: "Failed to login!"})
+				return
 			}
 		}
 
-		pass := []byte(password)
-		upass := []byte(u.password)
+		pass := []byte(userForm.Password)
+		upass := []byte(u.Password)
 
 		if bcrypt.CompareHashAndPassword(upass, pass) == nil {
 			s.Set("userId", u.Id)
-			r.JSON(200, u)
+			r.JSON(200, &UserResponse{
+				Status: 200,
+				User:   u})
 		} else {
 			r.JSON(400, &GeneralResponse{
-				Code:    400,
+				Status:  400,
 				Message: "Failed to login!"})
 		}
 	})
 
+	m.Delete("/logout", func(r render.Render, s sessions.Session) {
+		s.Delete("userId")
+
+		r.JSON(200, &GeneralResponse{
+			Status:  200,
+			Message: "Successfully logged out!"})
+	})
+
 	// user signup
 	m.Post("/signup", func(r render.Render, req *http.Request) {
-		email, password := req.FormValue("email"), req.FormValue("password")
+		username, password := req.FormValue("username"), req.FormValue("password")
 		pass := []byte(password)
 		p, err := bcrypt.GenerateFromPassword(pass, bcrypt.DefaultCost)
 		if err != nil {
 			return
 		}
 
-		_, err = db.Exec("INSERT INTO users (email, encrypted_password) VALUES ($1, $2)", email, p)
+		_, err = db.Exec("INSERT INTO users (username, encrypted_password) VALUES ($1, $2)", username, p)
 		if err != nil {
 			fmt.Println("Insert error", err)
 			r.JSON(500, &GeneralResponse{
-				Code:    500,
+				Status:  500,
 				Message: "Failed to signup!"})
 			return
 		}
 
 		r.JSON(200, &GeneralResponse{
-			Code:    200,
+			Status:  200,
 			Message: "Successfully sign up!"})
 	})
 
@@ -202,16 +209,18 @@ func main() {
 
 	m.Get("/showme", func(params martini.Params, r render.Render, rw http.ResponseWriter, req *http.Request, s sessions.Session) {
 		user := &User{}
-		err := db.QueryRow("SELECT id, email from users where id=$1", s.Get("userId")).Scan(&user.Id, &user.Email)
-
+		err := db.QueryRow("SELECT id, username, firstname, lastname, players from users where id=$1", s.Get("userId")).Scan(&user.Id, &user.Username, &user.FirstName, &user.LastName, &user.Players)
 		if err != nil {
+			fmt.Println(err)
 			r.JSON(400, &GeneralResponse{
-				Code:    400,
+				Status:  400,
 				Message: "Failed to look up!"})
 			return
 		}
 
-		r.JSON(200, user)
+		r.JSON(200, &UserResponse{
+			Status: 200,
+			User:   *user})
 	})
 
 	m.Get("/players/:name", func(params martini.Params, r render.Render) {
@@ -221,12 +230,197 @@ func main() {
 
 		// build response for player stats
 		res := &PlayerStatsResponse{
-			Code:  200,
-			Stats: playerStats}
+			Status: 200,
+			Stats:  playerStats}
 
 		r.JSON(200, res)
 	})
 
+	m.Put("/add_card", binding.Bind(AddCardForm{}), func(r render.Render, rw http.ResponseWriter, req *http.Request, s sessions.Session, addCardForm AddCardForm) {
+		user := &User{}
+		err := db.QueryRow("SELECT players from users where id=$1", s.Get("userId")).Scan(&user.Players)
+
+		fmt.Println(user.Players)
+		for i := 0; i < len(addCardForm.Players); i++ {
+			var player map[string]interface{}
+			err = json.Unmarshal([]byte(addCardForm.Players[i]), &player)
+		}
+
+		fmt.Println(addCardForm.Players)
+		_, err = db.Exec("UPDATE users SET players = $1 WHERE id = $2", addCardForm.Players, s.Get("userId"))
+		if err != nil {
+			fmt.Println("Insert error", err)
+			r.JSON(500, &GeneralResponse{
+				Status:  500,
+				Message: "Failed to signup!"})
+			return
+		}
+
+		r.JSON(200, &GeneralResponse{
+			Status:  200,
+			Message: "...!"})
+	})
+
+	m.Post("/fb_signup", binding.Bind(FbForm{}), func(r render.Render, rw http.ResponseWriter, req *http.Request, s sessions.Session, fbForm FbForm) {
+		fbUser, err := FbGetMe(fbForm.Token)
+
+		if err != nil {
+			r.JSON(400, &GeneralResponse{
+				Status:  400,
+				Message: "Failed to signup!"})
+			return
+		}
+
+		// check if the user exists
+		rows, err := db.Query("SELECT id, username, lastname, firstname FROM users WHERE fb_id = $1", fbUser.Id)
+
+		if err != nil {
+			fmt.Println(err)
+			r.JSON(400, &GeneralResponse{
+				Status:  400,
+				Message: "Failed to signup!"})
+			return
+		}
+
+		if rows.Next() {
+			r.JSON(400, &GeneralResponse{
+				Status:  400,
+				Message: "User already exists!"})
+			return
+		}
+
+		_, err = db.Exec("INSERT INTO users (fb_id, username, firstname, lastname) VALUES ($1, $2, $3, $4)", fbUser.Id, fbUser.Username, fbUser.FirstName, fbUser.LastName)
+		if err != nil {
+			fmt.Println("Insert error", err)
+			r.JSON(500, &GeneralResponse{
+				Status:  500,
+				Message: "Failed to signup!"})
+			return
+		}
+
+		rows, err = db.Query("SELECT id, username, lastname, firstname FROM users WHERE fb_id = $1", fbUser.Id)
+
+		if err != nil {
+			r.JSON(400, &GeneralResponse{
+				Status:  400,
+				Message: "Failed to signup!"})
+			return
+		}
+
+		var u User
+		for rows.Next() {
+			err = rows.Scan(&u.Id, &u.Username, &u.LastName, &u.FirstName)
+			if err != nil {
+				fmt.Println("Scan: ", err)
+
+				r.JSON(400, &GeneralResponse{
+					Status:  400,
+					Message: "Failed to login!"})
+				return
+			}
+		}
+
+		s.Set("userId", u.Id)
+		r.JSON(200, &UserResponse{
+			Status: 200,
+			User:   u})
+	})
+
+	m.Post("/fb_login", binding.Bind(FbForm{}), func(r render.Render, rw http.ResponseWriter, req *http.Request, s sessions.Session, fbForm FbForm) {
+		fbUser, err := FbGetMe(fbForm.Token)
+
+		if err != nil {
+			r.JSON(400, &GeneralResponse{
+				Status:  400,
+				Message: "Failed to login!"})
+			return
+		}
+
+		rows, err := db.Query("SELECT id, username, lastname, firstname FROM users WHERE fb_id = $1", fbUser.Id)
+		if err != nil {
+			fmt.Println(err)
+			r.JSON(400, &GeneralResponse{
+				Status:  400,
+				Message: "Failed to login!"})
+			return
+		}
+
+		var u User
+		for rows.Next() {
+			err = rows.Scan(&u.Id, &u.Username, &u.LastName, &u.FirstName)
+			if err != nil {
+				fmt.Println("Scan: ", err)
+
+				r.JSON(400, &GeneralResponse{
+					Status:  400,
+					Message: "Failed to login!"})
+				return
+			}
+		}
+
+		s.Set("userId", u.Id)
+		r.JSON(200, &UserResponse{
+			Status: 200,
+			User:   u})
+	})
+
 	http.ListenAndServe(":8080", m)
 	m.Run()
+}
+
+func FbGetMe(token string) (FbUser, error) {
+	fmt.Println("Getting me")
+	response, err := getUncachedResponse("https://graph.facebook.com/me?access_token=" + token)
+
+	if err == nil {
+		responseBody := readHttpBody(response)
+
+		if responseBody != "" {
+			var fbUser FbUser
+			err = json.Unmarshal([]byte(responseBody), &fbUser)
+
+			if err == nil {
+				return fbUser, nil
+			}
+		}
+		return FbUser{}, err
+	}
+
+	return FbUser{}, err
+}
+
+func getUncachedResponse(uri string) (*http.Response, error) {
+	fmt.Println("Uncached response GET")
+	request, err := http.NewRequest("GET", uri, nil)
+
+	if err == nil {
+		request.Header.Add("Cache-Control", "no-cache")
+
+		client := new(http.Client)
+
+		return client.Do(request)
+	}
+
+	if err != nil {
+	}
+	return nil, err
+}
+
+func readHttpBody(response *http.Response) string {
+	fmt.Println("Reading body")
+
+	bodyBuffer := make([]byte, 1000)
+	var str string
+
+	count, err := response.Body.Read(bodyBuffer)
+
+	for ; count > 0; count, err = response.Body.Read(bodyBuffer) {
+		if err != nil {
+
+		}
+
+		str += string(bodyBuffer[:count])
+	}
+
+	return str
 }
