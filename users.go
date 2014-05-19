@@ -1,6 +1,17 @@
 package main
 
-import ()
+import (
+  "encoding/json"
+)
+
+type UserRaw struct {
+	Id        int64    `json:"id"`
+	Username  string   `json:"username"`
+	Password  string   `json:"password,omitempty"`
+	FirstName string   `json:"firstname"`
+	LastName  string   `json:"lastname"`
+	Players   *json.RawMessage `json:"players,omitempty"`
+}
 
 type User struct {
 	Id        int64    `json:"id"`
@@ -8,7 +19,7 @@ type User struct {
 	Password  string   `json:"password,omitempty"`
 	FirstName string   `json:"firstname"`
 	LastName  string   `json:"lastname"`
-	Players   []string `json:"players"`
+	Players   string `json:"players,omitempty"`
 }
 
 type UserResponse struct {
