@@ -1,26 +1,17 @@
 package main
 
-import (
-  "encoding/json"
-)
-
-type UserRaw struct {
-	Id        int64    `json:"id"`
-	Username  string   `json:"username"`
-	Password  string   `json:"password,omitempty"`
-	FirstName string   `json:"firstname"`
-	LastName  string   `json:"lastname"`
-	Players   *json.RawMessage `json:"players,omitempty"`
-}
+import ()
 
 type User struct {
-	Id        int64    `json:"id"`
-	Username  string   `json:"username"`
-	Password  string   `json:"password,omitempty"`
-	FirstName string   `json:"firstname"`
-	LastName  string   `json:"lastname"`
-	Players   string `json:"players,omitempty"`
+	Id        int64         `json:"id"`
+	Username  string        `json:"username"`
+	Password  string        `json:"password,omitempty"`
+	FirstName string        `json:"firstname"`
+	LastName  string        `json:"lastname"`
+	Players   []UserPlayers `json:"players,omitempty"`
 }
+
+type UserPlayers []string
 
 type UserResponse struct {
 	Status int  `json:"status"`

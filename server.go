@@ -14,6 +14,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"reflect"
 	"strconv"
 )
 
@@ -39,7 +40,7 @@ type AddCardForm struct {
 func main() {
 	m := martini.Classic()
 
-	db, err := sql.Open("postgres", "user=plee dbname=fcards sslmode=disable")
+	db, err := sql.Open("postgres", "user=ins429 dbname=fcards sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -208,8 +209,9 @@ func main() {
 	})
 
 	m.Get("/showme", func(params martini.Params, r render.Render, rw http.ResponseWriter, req *http.Request, s sessions.Session) {
-		userRaw := &UserRaw{}
-		err := db.QueryRow("SELECT id, username, firstname, lastname, players from users where id=$1", s.Get("userId")).Scan(&userRaw.Id, &userRaw.Username, &userRaw.FirstName, &userRaw.LastName, &userRaw.Players)
+		user := &User{}
+		var players string
+		err := db.QueryRow("SELECT id, username, firstname, lastname, players from users where id=$1", s.Get("userId")).Scan(&user.Id, &user.Username, &user.FirstName, &user.LastName, &players)
 		if err != nil {
 			fmt.Println(err)
 			r.JSON(400, &GeneralResponse{
@@ -217,15 +219,16 @@ func main() {
 				Message: "Failed to look up!"})
 			return
 		}
-
-    players := string(*userRaw.Players)
-    user := &User{
-      Id: userRaw.Id,
-      Username: userRaw.Username,
-      FirstName: userRaw.FirstName,
-      LastName: userRaw.LastName,
-      Players: players}
-
+		newArray := []interface{}{"{\"name\":\"luis-suarez\"}", "{\"name\":\"leighton-baines\"}"}
+		fmt.Println(newArray)
+		test := interface{}(players)
+		fmt.Println([]interface{}(test))
+		playersByt := []byte(players)
+		var dat []interface{}
+		if err := json.Unmarshal(playersByt, &dat); err != nil {
+			panic(err)
+		}
+		fmt.Println(reflect.TypeOf(dat))
 		r.JSON(200, &UserResponse{
 			Status: 200,
 			User:   *user})
