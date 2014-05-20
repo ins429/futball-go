@@ -1,6 +1,6 @@
 <section ng-controller="Cards" ng-init="initCards()">
-  <input id="player-name" type="text" ng-model="playerName" ng-enter="getCards()">
-  <button class="button" ng-click="getCards()">Search</button>
+  <input id="player-name" type="text" ng-model="playerName" ng-enter="searchCard()">
+  <button class="button" ng-click="searchCard()">Search</button>
   <div id="players-list">
     <ul>
       <li ng-repeat="playerAlias in players | filter:playerName">{{ playerAlias }}</li>

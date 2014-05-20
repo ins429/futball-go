@@ -34,17 +34,17 @@ type CardResponse struct {
 }
 
 type AddCardForm struct {
-	Players []string `json:"players"`
+	Name string `form:"name" json:"name"`
 }
 
 type PlayerNames struct {
-  Names []string `form:"names" json:"names"`
+	Names []string `form:"names" json:"names"`
 }
 
 func main() {
 	m := martini.Classic()
 
-	db, err := sql.Open("postgres", "user=plee dbname=fcards sslmode=disable")
+	db, err := sql.Open("postgres", "user=ins429 dbname=fcards sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -163,21 +163,21 @@ func main() {
 		if err := json.Unmarshal(playersByt, &dat); err != nil {
 			panic(err)
 		}
-    user.Players = dat
+		user.Players = dat
 
 		r.JSON(200, &UserResponse{
 			Status: 200,
 			User:   *user})
 	})
 
-	m.Get("/players", binding.Form(PlayerNames{}), func(params martini.Params, r render.Render, playerNames PlayerNames) {
-    fmt.Println(playerNames)
+	m.Get("/players", binding.Bind(PlayerNames{}), func(params martini.Params, r render.Render, playerNames PlayerNames) {
+		fmt.Println(playerNames)
 		playerStats := []PlayerStat{}
 
-    for i := 0; i < len(playerNames.Names); i++ {
-      playerStat, _ := GetPlayerStat(string(playerNames.Names[i]))
-      playerStats = append(playerStats, *playerStat)
-    }
+		for i := 0; i < len(playerNames.Names); i++ {
+			playerStat, _ := GetPlayerStat(string(playerNames.Names[i]))
+			playerStats = append(playerStats, *playerStat)
+		}
 
 		// build response for player stats
 		res := &PlayerStatsResponse{
@@ -186,7 +186,6 @@ func main() {
 
 		r.JSON(200, res)
 	})
-
 
 	m.Get("/players/:name", func(params martini.Params, r render.Render) {
 		playerStat, _ := GetPlayerStat(params["name"])
@@ -202,22 +201,37 @@ func main() {
 	})
 
 	m.Put("/add_card", binding.Bind(AddCardForm{}), func(r render.Render, rw http.ResponseWriter, req *http.Request, s sessions.Session, addCardForm AddCardForm) {
-		user := &User{}
-		err := db.QueryRow("SELECT players from users where id=$1", s.Get("userId")).Scan(&user.Players)
-
-		fmt.Println(user.Players)
-		for i := 0; i < len(addCardForm.Players); i++ {
-			var player map[string]interface{}
-			err = json.Unmarshal([]byte(addCardForm.Players[i]), &player)
+		var playersRaw string
+		err := db.QueryRow("SELECT array_to_json(players) from users where id=$1", s.Get("userId")).Scan(&playersRaw)
+		if err != nil {
+			r.JSON(500, &GeneralResponse{
+				Status:  500,
+				Message: "Failed to add a card!"})
+			return
 		}
 
-		fmt.Println(addCardForm.Players)
-		_, err = db.Exec("UPDATE users SET players = $1 WHERE id = $2", addCardForm.Players, s.Get("userId"))
+		playersByt := []byte(playersRaw)
+		var userPlayers []map[string]interface{}
+		if err := json.Unmarshal(playersByt, &userPlayers); err != nil {
+			panic(err)
+		}
+
+		for i := 0; i < len(userPlayers); i++ {
+			// if the name already exists in user's card list
+			if userPlayers[i]["name"] == addCardForm.Name {
+				r.JSON(500, &GeneralResponse{
+					Status:  500,
+					Message: "Failed to add a card, " + addCardForm.Name + "already exists!"})
+				return
+			}
+		}
+
+		_, err = db.Exec("UPDATE users SET players = array_append(players, $1) WHERE id = $2", "{\"name\":\""+addCardForm.Name+"\"}", s.Get("userId"))
 		if err != nil {
 			fmt.Println("Insert error", err)
 			r.JSON(500, &GeneralResponse{
 				Status:  500,
-				Message: "Failed to signup!"})
+				Message: "Failed to add a card!"})
 			return
 		}
 

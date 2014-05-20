@@ -4,9 +4,9 @@ app.controller('Cards', function cardsCtrl($rootScope, $scope, $route, $routePar
     $rootScope.cards = [];
   };
 
-  $scope.getCards = function() {
+  $scope.searchCard = function() {
     var params = {
-      name: $scope.playerName.replace(" ", "-")
+      names: [$scope.playerName.replace(" ", "-")]
     }
     api.getCard(params).then(function(data) {
       if (data && data.stats) {
@@ -15,23 +15,6 @@ app.controller('Cards', function cardsCtrl($rootScope, $scope, $route, $routePar
       } else {
         // fix me, handle error
       }
-    });
-  };
-
-  // pop form to create an card
-  $scope.addCard = function(name) {
-console.log('addCard')
-    $scope.cardData = {
-      action: 'add'
-    };
-    console.log(name)
-    var params = {
-      players: JSON.stringify({
-        name: name
-      })
-    }
-    api.addCard(params).then(function(data) {
-      console.log(data);
     });
   };
 
@@ -68,9 +51,7 @@ app.directive('cards', function(api) {
     link: function (scope, elem, attrs) {
       scope.addCard = function(name) {
         var params = {
-          players: JSON.stringify([{
-            name: name
-          }])
+          name: name
         }
         api.addCard(params).then(function(data) {
           console.log(data);
@@ -79,7 +60,7 @@ app.directive('cards', function(api) {
 
       scope.$watch('cards', function(oldVal, newVal) {
         if (scope.cards.length > 0) {
-          React.renderComponent(window.Cards({players: scope.cards}), elem[0]);
+          React.renderComponent(window.Cards({players: scope.cards, addCard: scope.addCard}), elem[0]);
         }
       });
     }
