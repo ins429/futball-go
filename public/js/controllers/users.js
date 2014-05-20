@@ -29,12 +29,17 @@ app.controller('Users', function UsersCtrl($rootScope, $scope, $route, api) {
     api.showMe().then(function(resp) {
       if (resp.status && resp.status === 200) {
         $rootScope.user = resp.user;
-        console.log(resp)
-        var players = JSON.parse(resp.user.players)
-        var params = {
-          name: players[0].name.replace(" ", "-")
-        }
-        api.getCard(params).then(function(data) {
+        var players = resp.user.players,
+          names = [];
+
+        // collect names
+        angular.forEach(players, function(value){
+          this.push(value.name);
+        }, names);
+
+        api.getCard({
+          names: names
+        }).then(function(data) {
           if (data && data.stats) {
             $rootScope.cards = data.stats;
             $scope.playerName = '';

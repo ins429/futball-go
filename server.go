@@ -14,8 +14,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"reflect"
-	"strconv"
+	// "reflect"
+	// "strconv"
 )
 
 type Card struct {
@@ -37,10 +37,14 @@ type AddCardForm struct {
 	Players []string `json:"players"`
 }
 
+type PlayerNames struct {
+  Names []string `form:"names" json:"names"`
+}
+
 func main() {
 	m := martini.Classic()
 
-	db, err := sql.Open("postgres", "user=ins429 dbname=fcards sslmode=disable")
+	db, err := sql.Open("postgres", "user=plee dbname=fcards sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -54,72 +58,6 @@ func main() {
 
 	m.Get("/", func(params martini.Params, r render.Render) {
 		r.HTML(200, "index", nil)
-	})
-
-	// query cards
-	m.Get("/cards", func(params martini.Params, r render.Render, rw http.ResponseWriter, req *http.Request) {
-		limit, _ := strconv.ParseInt(req.URL.Query().Get("limit"), 10, 0)
-		skip, _ := strconv.ParseInt(req.URL.Query().Get("skip"), 10, 0)
-
-		// set default skip to 10
-		if limit < 10 {
-			limit = 10
-		}
-
-		rows, err := db.Query("SELECT id, name FROM cards LIMIT $1 OFFSET $2", limit, skip)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		defer rows.Close()
-
-		// for the consistency on the response, put it in array
-		cards := []Card{}
-		for rows.Next() {
-			var i Card
-			err = rows.Scan(&i.Id, &i.Name)
-			if err != nil {
-				fmt.Println("Scan: ", err)
-			}
-
-			cards = append(cards, i)
-		}
-
-		// build response for cards
-		res := &CardResponse{
-			Status: 200,
-			Cards:  cards}
-
-		r.JSON(200, res)
-	})
-
-	// get card by id
-	m.Get("/cards/:id", func(params martini.Params, r render.Render) {
-		// query by the card id
-		rows, err := db.Query("SELECT id, name FROM cards WHERE id = $1", params["id"])
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		defer rows.Close()
-
-		cards := []Card{}
-		for rows.Next() {
-			var i Card
-			err = rows.Scan(&i.Id, &i.Name)
-			if err != nil {
-				fmt.Println("Scan: ", err)
-			}
-
-			cards = append(cards, i)
-		}
-
-		// build response for cards
-		res := &CardResponse{
-			Status: 200,
-			Cards:  cards}
-
-		r.JSON(200, res)
 	})
 
 	// user login
@@ -210,8 +148,8 @@ func main() {
 
 	m.Get("/showme", func(params martini.Params, r render.Render, rw http.ResponseWriter, req *http.Request, s sessions.Session) {
 		user := &User{}
-		var players string
-		err := db.QueryRow("SELECT id, username, firstname, lastname, players from users where id=$1", s.Get("userId")).Scan(&user.Id, &user.Username, &user.FirstName, &user.LastName, &players)
+		var playersRaw string
+		err := db.QueryRow("SELECT id, username, firstname, lastname, array_to_json(players) from users where id=$1", s.Get("userId")).Scan(&user.Id, &user.Username, &user.FirstName, &user.LastName, &playersRaw)
 		if err != nil {
 			fmt.Println(err)
 			r.JSON(400, &GeneralResponse{
@@ -219,20 +157,36 @@ func main() {
 				Message: "Failed to look up!"})
 			return
 		}
-		newArray := []interface{}{"{\"name\":\"luis-suarez\"}", "{\"name\":\"leighton-baines\"}"}
-		fmt.Println(newArray)
-		test := interface{}(players)
-		fmt.Println([]interface{}(test))
-		playersByt := []byte(players)
+
+		playersByt := []byte(playersRaw)
 		var dat []interface{}
 		if err := json.Unmarshal(playersByt, &dat); err != nil {
 			panic(err)
 		}
-		fmt.Println(reflect.TypeOf(dat))
+    user.Players = dat
+
 		r.JSON(200, &UserResponse{
 			Status: 200,
 			User:   *user})
 	})
+
+	m.Get("/players", binding.Form(PlayerNames{}), func(params martini.Params, r render.Render, playerNames PlayerNames) {
+    fmt.Println(playerNames)
+		playerStats := []PlayerStat{}
+
+    for i := 0; i < len(playerNames.Names); i++ {
+      playerStat, _ := GetPlayerStat(string(playerNames.Names[i]))
+      playerStats = append(playerStats, *playerStat)
+    }
+
+		// build response for player stats
+		res := &PlayerStatsResponse{
+			Status: 200,
+			Stats:  playerStats}
+
+		r.JSON(200, res)
+	})
+
 
 	m.Get("/players/:name", func(params martini.Params, r render.Render) {
 		playerStat, _ := GetPlayerStat(params["name"])

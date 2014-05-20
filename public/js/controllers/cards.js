@@ -67,8 +67,6 @@ app.directive('cards', function(api) {
     },
     link: function (scope, elem, attrs) {
       scope.addCard = function(name) {
-        console.log('addCard')
-        console.log(name)
         var params = {
           players: JSON.stringify([{
             name: name
@@ -81,9 +79,7 @@ app.directive('cards', function(api) {
 
       scope.$watch('cards', function(oldVal, newVal) {
         if (scope.cards.length > 0) {
-          for (var i = 0; i < scope.cards.length; i++) {
-            React.renderComponent(window.Card({player: scope.cards[i], addCard: scope.addCard}), elem[0]);
-          }
+          React.renderComponent(window.Cards({players: scope.cards}), elem[0]);
         }
       });
     }

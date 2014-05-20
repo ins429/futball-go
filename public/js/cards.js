@@ -4,7 +4,7 @@ var Card = React.createClass({
     return (
       <div className="card-wrapper">
         <div className="card">
-          <h1>{ this.props.player.name }<i className="fa fa-plus add-card" onClick={ this.props.addCard(this.props.player.nameAlias) }></i></h1>
+          <h1>{ this.props.player.name }<i className="fa fa-plus add-card"></i></h1>
           <a href="#">
             <img src={"http://www.premierleague.com/" + this.props.player.image } />
           </a>
@@ -97,6 +97,16 @@ var Card = React.createClass({
         </div>
       </div>
     );
+  }
+});
+
+var Cards = React.createClass({
+  render: function() {
+    var cardNodes = this.props.players.map(function(player, arr) {
+      return <Card player={player} />;
+    }); 
+
+    return <div>{cardNodes}</div>;
   }
 });
 

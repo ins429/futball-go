@@ -1,7 +1,9 @@
 app.service('api', function($http, $upload) {
   return {
-    getCard: function(query) {
-      var data = $http({method: 'GET', params: query, url: '/players/' + query.name}).then(function(resp){
+    getCard: function(params) {
+      var data = $http({method: 'GET', params: params, url: '/players'}).then(function(resp){
+        return resp.data;
+      }, function(resp) {
         return resp.data;
       });
 

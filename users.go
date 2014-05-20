@@ -8,7 +8,7 @@ type User struct {
 	Password  string        `json:"password,omitempty"`
 	FirstName string        `json:"firstname"`
 	LastName  string        `json:"lastname"`
-	Players   []UserPlayers `json:"players,omitempty"`
+	Players   []interface{} `json:"players,omitempty"`
 }
 
 type UserPlayers []string

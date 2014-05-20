@@ -2,7 +2,6 @@ package main
 
 import (
 	// "database/sql"
-	"fmt"
 	. "github.com/PuerkitoBio/goquery"
 	_ "github.com/lib/pq"
 	"strconv"
@@ -74,8 +73,6 @@ func GetPlayerStat(nameAlias string) (*PlayerStat, error) {
 	appearances := strings.Replace(careerDoc.Find(".contentTable.stats").Eq(0).Find("tr:nth-child(2) td:nth-child(2)").Text(), "\t", "", -1)
 	appearances = strings.Replace(appearances, "\n", "", -1)
 	appearances = strings.Replace(appearances, " ", "", -1)
-
-	fmt.Println(appearances)
 
 	// attacking
 	goals, _ := strconv.ParseInt(statDoc.Find("#clubsTabsAttacking li[name='goals'] .data").Text(), 10, 0)
