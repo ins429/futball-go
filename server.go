@@ -221,7 +221,7 @@ func main() {
 			if userPlayers[i]["name"] == addCardForm.Name {
 				r.JSON(500, &GeneralResponse{
 					Status:  500,
-					Message: "Failed to add a card, " + addCardForm.Name + "already exists!"})
+					Message: "Failed to add a card, " + addCardForm.Name + " already exists!"})
 				return
 			}
 		}
