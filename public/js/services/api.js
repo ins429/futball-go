@@ -1,4 +1,4 @@
-app.service('api', function($http, $upload) {
+app.service('api', function($http) {
   return {
     getCard: function(params) {
       var data = $http({method: 'GET', params: params, url: '/players'}).then(function(resp){

@@ -1,6 +1,6 @@
 'use strict';
 
-var app = angular.module('futball-cards', ['ngRoute', 'angularFileUpload']);
+var app = angular.module('futball-cards', ['ngRoute']);
 
 app.run(['$rootScope', '$window', function($rootScope, $window) {
   $window.fbAsyncInit = function() {

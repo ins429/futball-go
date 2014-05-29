@@ -111,3 +111,13 @@ var Cards = React.createClass({
   }
 });
 
+var SearchCard = React.createClass({
+  render: function() {
+    return (
+      <div>
+        <input id="player-name" type="text" onBlur={ this.props.toggle } onFocus={ this.props.toggle } />
+        <button className="button" onClick={ this.props.searchCard() }>Search</button>
+      </div>
+    );
+  }
+});

@@ -1,6 +1,7 @@
-<section ng-controller="Cards" ng-init="initCards()">
-  <input id="player-name" type="text" ng-model="playerName" ng-enter="searchCard()">
-  <button class="button" ng-click="searchCard()">Search</button>
+<section ng-controller="Cards" ng-init="initCards()" class="cards-wrapper">
+  <!-- <input id="player&#45;name" type="text" ng&#45;model="playerName" ng&#45;enter="searchCard()" ng&#45;blur="toggleAvailableList()" ng&#45;focus="toggleAvailableList()"> -->
+  <!-- <button class="button" ng&#45;click="searchCard()">Search</button> -->
+  <search-card></search-card>
   <div id="players-list">
     <ul>
       <li ng-repeat="playerAlias in players | filter:playerName">{{ playerAlias }}</li>
