@@ -1,7 +1,8 @@
 package main
 
 import (
-	// "database/sql"
+	"database/sql"
+  "fmt"
 	. "github.com/PuerkitoBio/goquery"
 	_ "github.com/lib/pq"
 	"strconv"
@@ -16,6 +17,7 @@ type PlayerStatsResponse struct {
 
 type PlayerStat struct {
 	Name     string `json:"name"`
+	NameAlias   string `json:"nameAlias"`
 	Club     string `json:"club"`
 	Position string `json:"position"`
 	Dob      string `json:"dob"`
@@ -25,7 +27,6 @@ type PlayerStat struct {
 	National string `json:"national"`
 	Image    string `json:"image"`
 
-	NameAlias   string `json:"nameAlias"`
 	Appearances string `json:"appearances"`
 	Goals       int64  `json:"goals"`
 	Shots       int64  `json:"shots"`
@@ -119,15 +120,15 @@ func GetPlayerStat(nameAlias string) (*PlayerStat, error) {
 		Fouls:       fouls,
 		Cards:       cards}
 
-	// db, err := sql.Open("postgres", "user=ins429 dbname=fcards sslmode=disable")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
+	db, err := sql.Open("postgres", "user=plee dbname=fcards sslmode=disable")
+	if err != nil {
+		fmt.Println(err)
+	}
 
-	// _, err = db.Exec("INSERT INTO players (name, nameAlias, club, position, goals, shots, penalties, assists, crosses, offsides, savesMade, ownGoals, cleanSheets, blocks, clearances, fouls, cards, dob, height, age, weight, national) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)", name, nameAlias, club, position, goals, shots, penalties, assists, crosses, offsides, savesMade, ownGoals, cleanSheets, blocks, clearances, fouls, cards, dob, height, age, weight, national)
-	// if err != nil {
-	// 	fmt.Println("Insert error", err)
-	// }
+	_, err = db.Exec("INSERT INTO players (name, nameAlias, club, position, goals, shots, penalties, assists, crosses, offsides, savesMade, ownGoals, cleanSheets, blocks, clearances, fouls, cards, dob, height, age, weight, national, image, appearances) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)", playerName, nameAlias, club, position, goals, shots, penalties, assists, crosses, offsides, savesMade, ownGoals, cleanSheets, blocks, clearances, fouls, cards, dob, height, age, weight, national, image, appearances)
+	if err != nil {
+		fmt.Println("Insert error", err)
+	}
 
 	return playerStat, nil
 }

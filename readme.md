@@ -49,6 +49,7 @@ CREATE TABLE players (
   age         NUMERIC,
   weight      TEXT,
   national    TEXT
+  image       TEXT
 );
 
 ALTER TABLE users ADD id SERIAL;

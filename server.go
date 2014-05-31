@@ -44,7 +44,7 @@ type PlayerNames struct {
 func main() {
 	m := martini.Classic()
 
-	db, err := sql.Open("postgres", "user=ins429 dbname=fcards sslmode=disable")
+	db, err := sql.Open("postgres", "user=plee dbname=fcards sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -171,12 +171,43 @@ func main() {
 	})
 
 	m.Get("/players", binding.Bind(PlayerNames{}), func(params martini.Params, r render.Render, playerNames PlayerNames) {
-		fmt.Println(playerNames)
+		fmt.Println(playerNames.Names)
+    playerNamesStr := ""
 		playerStats := []PlayerStat{}
 
 		for i := 0; i < len(playerNames.Names); i++ {
-			playerStat, _ := GetPlayerStat(string(playerNames.Names[i]))
-			playerStats = append(playerStats, *playerStat)
+      playerNamesStr += "'" + playerNames.Names[i] + "'"
+      if i < len(playerNames.Names) - 1 {
+        playerNamesStr += ","
+      }
+      // playerStat, _ := GetPlayerStat(string(playerNames.Names[i]))
+      // playerStats = append(playerStats, *playerStat)
+		}
+    fmt.Println("hmm..")
+    fmt.Println(playerNamesStr)
+    playerNamesStr = "luis-suarez"
+
+		rows, err := db.Query("SELECT name, nameAlias, club, position, dob, height, age, weight, national, image, appearances, goals, shots, penalties, assists, crosses, offsides, savesMade, ownGoals, cleanSheets, blocks, clearances, fouls, cards FROM players WHERE nameAlias IN ($1)", playerNames.Names)
+
+    if err != nil {
+      fmt.Println("Query: ", err)
+    }
+
+		var p PlayerStat
+		for rows.Next() {
+      err = rows.Scan(&p.Name, &p.NameAlias, &p.Club, &p.Position, &p.Dob, &p.Height, &p.Age, &p.Weight, &p.National, &p.Image, &p.Appearances, &p.Goals, &p.Shots, &p.Penalties, &p.Assists, &p.Crosses, &p.Offsides, &p.SavesMade, &p.OwnGoals, &p.CleanSheets, &p.Blocks, &p.Clearances, &p.Fouls, &p.Cards)
+			if err != nil {
+				fmt.Println("Scan: ", err)
+
+				r.JSON(400, &GeneralResponse{
+					Status:  400,
+					Message: "Failed to login!"})
+				return
+			}
+
+      fmt.Println(p)
+
+      playerStats = append(playerStats, p)
 		}
 
 		// build response for player stats
