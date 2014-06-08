@@ -2,7 +2,7 @@ package main
 
 import (
 	"database/sql"
-  "fmt"
+	"fmt"
 	. "github.com/PuerkitoBio/goquery"
 	_ "github.com/lib/pq"
 	"strconv"
@@ -16,16 +16,16 @@ type PlayerStatsResponse struct {
 }
 
 type PlayerStat struct {
-	Name     string `json:"name"`
-	NameAlias   string `json:"nameAlias"`
-	Club     string `json:"club"`
-	Position string `json:"position"`
-	Dob      string `json:"dob"`
-	Height   string `json:"height"`
-	Age      int64  `json:"age"`
-	Weight   string `json:"weight"`
-	National string `json:"national"`
-	Image    string `json:"image"`
+	Name      string `json:"name"`
+	NameAlias string `json:"nameAlias"`
+	Club      string `json:"club"`
+	Position  string `json:"position"`
+	Dob       string `json:"dob"`
+	Height    string `json:"height"`
+	Age       int64  `json:"age"`
+	Weight    string `json:"weight"`
+	National  string `json:"national"`
+	Image     string `json:"image"`
 
 	Appearances string `json:"appearances"`
 	Goals       int64  `json:"goals"`
@@ -63,7 +63,7 @@ func GetPlayerStat(nameAlias string) (*PlayerStat, error) {
 	// general
 	playerName := overviewDoc.Find(".hero-name .name").Eq(0).Text()
 	club := overviewDoc.Find(".stats li").Eq(0).Find("p").Text()
-	position := Captialize(strings.ToLower(overviewDoc.Find(".stats li").Eq(1).Find("p").Text()))
+	position := Capitalize(strings.ToLower(overviewDoc.Find(".stats li").Eq(1).Find("p").Text()))
 	dob := overviewDoc.Find(".contentTable .normal").Eq(0).Text()
 	height := overviewDoc.Find(".contentTable .normal").Eq(1).Text()
 	age, _ := strconv.ParseInt(overviewDoc.Find(".contentTable .normal").Eq(2).Text(), 10, 0)
@@ -120,7 +120,7 @@ func GetPlayerStat(nameAlias string) (*PlayerStat, error) {
 		Fouls:       fouls,
 		Cards:       cards}
 
-	db, err := sql.Open("postgres", "user=plee dbname=fcards sslmode=disable")
+	db, err := sql.Open("postgres", "user=ins429 dbname=fcards sslmode=disable")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -133,7 +133,7 @@ func GetPlayerStat(nameAlias string) (*PlayerStat, error) {
 	return playerStat, nil
 }
 
-func Captialize(str string) string {
+func Capitalize(str string) string {
 	letters := []rune(str)
 	letters[0] = unicode.ToUpper(letters[0])
 	cappedStr := string(letters)

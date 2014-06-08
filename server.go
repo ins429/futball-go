@@ -14,8 +14,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	// "strings"
 	// "reflect"
-	// "strconv"
+	"strconv"
 )
 
 type Card struct {
@@ -44,7 +45,7 @@ type PlayerNames struct {
 func main() {
 	m := martini.Classic()
 
-	db, err := sql.Open("postgres", "user=plee dbname=fcards sslmode=disable")
+	db, err := sql.Open("postgres", "user=ins429 dbname=fcards sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -111,8 +112,8 @@ func main() {
 		_, err = db.Exec("INSERT INTO users (username, encrypted_password) VALUES ($1, $2)", username, p)
 		if err != nil {
 			fmt.Println("Insert error", err)
-			r.JSON(500, &GeneralResponse{
-				Status:  500,
+			r.JSON(400, &GeneralResponse{
+				Status:  400,
 				Message: "Failed to signup!"})
 			return
 		}
@@ -171,43 +172,48 @@ func main() {
 	})
 
 	m.Get("/players", binding.Bind(PlayerNames{}), func(params martini.Params, r render.Render, playerNames PlayerNames) {
-		fmt.Println(playerNames.Names)
-    playerNamesStr := ""
+		if len(playerNames.Names) == 0 {
+			r.JSON(400, &GeneralResponse{
+				Status:  400,
+				Message: "Please pass in player names!"})
+			return
+		}
+		dollars := ""
 		playerStats := []PlayerStat{}
 
 		for i := 0; i < len(playerNames.Names); i++ {
-      playerNamesStr += "'" + playerNames.Names[i] + "'"
-      if i < len(playerNames.Names) - 1 {
-        playerNamesStr += ","
-      }
-      // playerStat, _ := GetPlayerStat(string(playerNames.Names[i]))
-      // playerStats = append(playerStats, *playerStat)
+			dollars += "$" + strconv.Itoa(i+1)
+			if i < len(playerNames.Names)-1 {
+				dollars += ","
+			}
+			// playerStat, _ := GetPlayerStat(string(playerNames.Names[i]))
+			// playerStats = append(playerStats, *playerStat)
 		}
-    fmt.Println("hmm..")
-    fmt.Println(playerNamesStr)
-    playerNamesStr = "luis-suarez"
 
-		rows, err := db.Query("SELECT name, nameAlias, club, position, dob, height, age, weight, national, image, appearances, goals, shots, penalties, assists, crosses, offsides, savesMade, ownGoals, cleanSheets, blocks, clearances, fouls, cards FROM players WHERE nameAlias IN ($1)", playerNames.Names)
+		args := make([]interface{}, len(playerNames.Names))
+		for i, s := range playerNames.Names {
+			args[i] = s
+		}
 
-    if err != nil {
-      fmt.Println("Query: ", err)
-    }
+		rows, err := db.Query("SELECT name, nameAlias, club, position, dob, height, age, weight, national, image, appearances, goals, shots, penalties, assists, crosses, offsides, savesMade, ownGoals, cleanSheets, blocks, clearances, fouls, cards FROM players WHERE nameAlias IN ("+dollars+")", args...)
+
+		if err != nil {
+			fmt.Println("Query: ", err)
+		}
 
 		var p PlayerStat
 		for rows.Next() {
-      err = rows.Scan(&p.Name, &p.NameAlias, &p.Club, &p.Position, &p.Dob, &p.Height, &p.Age, &p.Weight, &p.National, &p.Image, &p.Appearances, &p.Goals, &p.Shots, &p.Penalties, &p.Assists, &p.Crosses, &p.Offsides, &p.SavesMade, &p.OwnGoals, &p.CleanSheets, &p.Blocks, &p.Clearances, &p.Fouls, &p.Cards)
+			err = rows.Scan(&p.Name, &p.NameAlias, &p.Club, &p.Position, &p.Dob, &p.Height, &p.Age, &p.Weight, &p.National, &p.Image, &p.Appearances, &p.Goals, &p.Shots, &p.Penalties, &p.Assists, &p.Crosses, &p.Offsides, &p.SavesMade, &p.OwnGoals, &p.CleanSheets, &p.Blocks, &p.Clearances, &p.Fouls, &p.Cards)
 			if err != nil {
 				fmt.Println("Scan: ", err)
 
 				r.JSON(400, &GeneralResponse{
 					Status:  400,
-					Message: "Failed to login!"})
+					Message: "Failed to get players!"})
 				return
 			}
 
-      fmt.Println(p)
-
-      playerStats = append(playerStats, p)
+			playerStats = append(playerStats, p)
 		}
 
 		// build response for player stats
@@ -218,40 +224,101 @@ func main() {
 		r.JSON(200, res)
 	})
 
-	m.Get("/players/:name", func(params martini.Params, r render.Render) {
-		playerStat, _ := GetPlayerStat(params["name"])
-		playerStats := []PlayerStat{}
-		playerStats = append(playerStats, *playerStat)
-
-		// build response for player stats
-		res := &PlayerStatsResponse{
-			Status: 200,
-			Stats:  playerStats}
-
-		r.JSON(200, res)
-	})
-
-	m.Put("/add_card", binding.Bind(AddCardForm{}), func(r render.Render, rw http.ResponseWriter, req *http.Request, s sessions.Session, addCardForm AddCardForm) {
+	m.Delete("/remove_card", binding.Bind(AddCardForm{}), func(r render.Render, rw http.ResponseWriter, req *http.Request, s sessions.Session, addCardForm AddCardForm) {
 		var playersRaw string
 		err := db.QueryRow("SELECT array_to_json(players) from users where id=$1", s.Get("userId")).Scan(&playersRaw)
 		if err != nil {
-			r.JSON(500, &GeneralResponse{
-				Status:  500,
+			r.JSON(400, &GeneralResponse{
+				Status:  400,
 				Message: "Failed to add a card!"})
 			return
 		}
 
 		playersByt := []byte(playersRaw)
 		var userPlayers []map[string]interface{}
+
 		if err := json.Unmarshal(playersByt, &userPlayers); err != nil {
-			panic(err)
+			fmt.Println(err)
+			r.JSON(400, &GeneralResponse{
+				Status:  400,
+				Message: "Failed to add a card!"})
+			return
+		}
+
+		playerFound := false
+		dollars := ""
+		for i := 0; i < len(userPlayers); i++ {
+			// if the name already exists in user's card list
+			if userPlayers[i]["name"] == addCardForm.Name {
+				copy(userPlayers[i:], userPlayers[i+1:])
+				userPlayers[len(userPlayers)-1] = nil // or the zero value of T
+				userPlayers = userPlayers[:len(userPlayers)-1]
+				playerFound = true
+			}
+		}
+
+		for i := 0; i < len(userPlayers); i++ {
+			dollars += "$" + strconv.Itoa(i+1)
+			if i < len(userPlayers)-1 {
+				dollars += ","
+			}
+		}
+
+		if !playerFound || err != nil {
+			r.JSON(400, &GeneralResponse{
+				Status:  400,
+				Message: "Failed to remove a card!"})
+			return
+		}
+
+		args := make([]interface{}, len(userPlayers))
+		for i, s := range userPlayers {
+			userPlayersJson, _ := json.Marshal(s)
+			args[i] = string(userPlayersJson)
+		}
+		args = append(args, s.Get("userId"))
+
+		_, err = db.Exec("UPDATE users SET players = CAST(ARRAY["+dollars+"] as json[]) WHERE id = $"+strconv.Itoa(len(userPlayers)+1), args...)
+		if err != nil {
+			fmt.Println("Update error", err)
+			r.JSON(400, &GeneralResponse{
+				Status:  400,
+				Message: "Failed to add a card!"})
+			return
+		}
+
+		r.JSON(200, &GeneralResponse{
+			Status:  200,
+			Message: "Removed!"})
+	})
+
+	m.Put("/add_card", binding.Bind(AddCardForm{}), func(r render.Render, rw http.ResponseWriter, req *http.Request, s sessions.Session, addCardForm AddCardForm) {
+		fmt.Println("yes")
+		var playersRaw string
+		err := db.QueryRow("SELECT array_to_json(players) from users where id=$1", s.Get("userId")).Scan(&playersRaw)
+		if err != nil {
+			r.JSON(400, &GeneralResponse{
+				Status:  400,
+				Message: "Failed to add a card!"})
+			return
+		}
+
+		playersByt := []byte(playersRaw)
+		var userPlayers []map[string]interface{}
+		fmt.Println("here")
+		if err := json.Unmarshal(playersByt, &userPlayers); err != nil {
+			fmt.Println(err)
+			r.JSON(400, &GeneralResponse{
+				Status:  400,
+				Message: "Failed to add a card!"})
+			return
 		}
 
 		for i := 0; i < len(userPlayers); i++ {
 			// if the name already exists in user's card list
 			if userPlayers[i]["name"] == addCardForm.Name {
-				r.JSON(500, &GeneralResponse{
-					Status:  500,
+				r.JSON(400, &GeneralResponse{
+					Status:  400,
 					Message: "Failed to add a card, " + addCardForm.Name + " already exists!"})
 				return
 			}
@@ -259,9 +326,9 @@ func main() {
 
 		_, err = db.Exec("UPDATE users SET players = array_append(players, $1) WHERE id = $2", "{\"name\":\""+addCardForm.Name+"\"}", s.Get("userId"))
 		if err != nil {
-			fmt.Println("Insert error", err)
-			r.JSON(500, &GeneralResponse{
-				Status:  500,
+			fmt.Println("Update error", err)
+			r.JSON(400, &GeneralResponse{
+				Status:  400,
 				Message: "Failed to add a card!"})
 			return
 		}
@@ -302,8 +369,8 @@ func main() {
 		_, err = db.Exec("INSERT INTO users (fb_id, username, firstname, lastname) VALUES ($1, $2, $3, $4)", fbUser.Id, fbUser.Username, fbUser.FirstName, fbUser.LastName)
 		if err != nil {
 			fmt.Println("Insert error", err)
-			r.JSON(500, &GeneralResponse{
-				Status:  500,
+			r.JSON(400, &GeneralResponse{
+				Status:  400,
 				Message: "Failed to signup!"})
 			return
 		}

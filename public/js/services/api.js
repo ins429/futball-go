@@ -44,6 +44,20 @@ app.service('api', function($http) {
       return result;
     },
 
+    removeCard: function(params) {
+      var result = $http({
+        method: 'DELETE',
+        url: '/remove_card',
+        data: params
+      }).then(function(resp){
+        return resp.data;
+      }, function(resp) {
+        return resp.data;
+      });
+
+      return result;
+    },
+
     login: function(params) {
       var user = $http({
         method: 'POST',

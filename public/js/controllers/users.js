@@ -32,6 +32,10 @@ app.controller('Users', function UsersCtrl($rootScope, $scope, $route, api) {
         var players = resp.user.players,
           names = [];
 
+        // if players not found, do nothing
+        if (!players || players.length === 0) {
+          return;
+        }
         // collect names
         angular.forEach(players, function(value){
           this.push(value.name);
