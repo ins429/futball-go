@@ -1,0 +1,88 @@
+body {
+  background: #4B8;
+}
+
+input[type=text], input[type=email], input[type=url], input[type=password], textarea {
+  color: #fff;
+  background: #4B8;
+  border-top: 1px solid #fff;
+  border-left: 1px solid #fff;
+  border-right: 1px solid #fff;
+  border-bottom: 1px solid #fff;
+}
+
+input[type=text]:focus, input[type=email]:focus, input[type=url]:focus, input[type=password]:focus, textarea:focus {
+  border-color: #fff;
+}
+
+.card {
+  border: 2px solid #fff;
+  background-color: #4B8;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+}
+
+.card-header > h3 {
+  color: #fff;
+}
+
+.button {
+  color: #fff;
+  background: #4B8;
+  border: 1px solid #fff;
+}
+
+.button:hover {
+  background: #fff;
+  color: #4B8;
+}
+
+.button.red {
+  border: 1px solid #ff3b30;
+  color: #ff3b30;
+}
+
+.button.red:hover {
+  background: #ff3b30;
+  color: #fff;
+}
+
+.card h1 {
+  color: #fff;
+}
+#players-list ul {
+   background: #4B8;
+}
+
+#players-list ul li {
+  font: 300 16px/20px 'helvetica neue';
+  color: #fff;
+  border: 1px solid #fff;
+  border-bottom: 0;
+  padding: 5px;
+}
+
+#players-list ul li:last-child {
+  border: 1px solid #fff;
+}
+
+.menu ul li:hover {
+  color: #fff;
+}
+
+.menu-trigger {
+  background: #fff;
+}
+
+.card-data, .card-data-long {
+  color: #fff;
+}
+
+.card-data li {
+  border-right: solid 1px #fff;
+}
+
+.add-card {
+  color: #fff;
+}

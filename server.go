@@ -171,6 +171,75 @@ func main() {
 			User:   *user})
 	})
 
+	m.Get("/wc_players", binding.Bind(PlayerNames{}), func(params martini.Params, r render.Render, playerNames PlayerNames) {
+		if len(playerNames.Names) == 0 {
+			r.JSON(400, &GeneralResponse{
+				Status:  400,
+				Message: "Please pass in player names!"})
+			return
+		}
+		dollars := ""
+		playerStats := []WCPlayerStat{}
+
+		for i := 0; i < len(playerNames.Names); i++ {
+			dollars += "$" + strconv.Itoa(i+1)
+			if i < len(playerNames.Names)-1 {
+				dollars += ","
+			}
+		}
+
+		args := make([]interface{}, len(playerNames.Names))
+		for i, s := range playerNames.Names {
+			args[i] = s
+		}
+		fmt.Println(playerNames.Names)
+		var name, foot, birthDate, birthCountry, birthCity, national, position, club, image []byte
+		var age, height, weight, goals, assists, penaltyGoals, ownGoals float64
+		rows, err := db.Query("SELECT name, age, foot, birthDate, birthCountry, birthCity, national, height, weight, position, club, goals, assists, penaltyGoals, ownGoals, image FROM wc_players WHERE name IN ("+dollars+")", args...)
+
+		if err != nil {
+			fmt.Println("Query: ", err)
+		}
+
+		for rows.Next() {
+			err = rows.Scan(&name, &age, &foot, &birthDate, &birthCountry, &birthCity, &national, &height, &weight, &position, &club, &goals, &assists, &penaltyGoals, &ownGoals, &image)
+			if err != nil {
+				fmt.Println("Scan: ", err)
+
+				r.JSON(400, &GeneralResponse{
+					Status:  400,
+					Message: "Failed to get players!"})
+				return
+			}
+
+			p := &WCPlayerStat{
+				Name:         string(name),
+				Age:          age,
+				Foot:         string(foot),
+				BirthDate:    string(birthDate),
+				BirthCountry: string(birthCountry),
+				BirthCity:    string(birthCity),
+				National:     string(national),
+				Height:       height,
+				Weight:       weight,
+				Position:     string(position),
+				Club:         string(club),
+				Goals:        goals,
+				Assists:      assists,
+				PenaltyGoals: penaltyGoals,
+				OwnGoals:     ownGoals,
+				Image:        string(image)}
+			playerStats = append(playerStats, *p)
+		}
+
+		// build response for player stats
+		res := &WCPlayerStatsResponse{
+			Status: 200,
+			Stats:  playerStats}
+
+		r.JSON(200, res)
+	})
+
 	m.Get("/players", binding.Bind(PlayerNames{}), func(params martini.Params, r render.Render, playerNames PlayerNames) {
 		if len(playerNames.Names) == 0 {
 			r.JSON(400, &GeneralResponse{
@@ -293,7 +362,14 @@ func main() {
 	})
 
 	m.Put("/add_card", binding.Bind(AddCardForm{}), func(r render.Render, rw http.ResponseWriter, req *http.Request, s sessions.Session, addCardForm AddCardForm) {
-		fmt.Println("yes")
+		// check user session
+		if s.Get("userId") == nil || s.Get("userId") == "" {
+			r.JSON(400, &GeneralResponse{
+				Status:  400,
+				Message: "Please login first!"})
+			return
+		}
+
 		var playersRaw string
 		err := db.QueryRow("SELECT array_to_json(players) from users where id=$1", s.Get("userId")).Scan(&playersRaw)
 		if err != nil {
@@ -305,7 +381,6 @@ func main() {
 
 		playersByt := []byte(playersRaw)
 		var userPlayers []map[string]interface{}
-		fmt.Println("here")
 		if err := json.Unmarshal(playersByt, &userPlayers); err != nil {
 			fmt.Println(err)
 			r.JSON(400, &GeneralResponse{

@@ -24,6 +24,27 @@ CREATE TABLE cards (
   updated_at DATE
 );
 
+CREATE TABLE wc_players (
+  id SERIAL,
+  uid TEXT,
+  name TEXT,
+  age NUMERIC,
+  foot TEXT,
+  goals NUMERIC,
+  birthCountry TEXT,
+  birthCity TEXT,
+  penaltyGoals NUMERIC,
+  birthDate TEXT,
+  image TEXT,
+  weight NUMERIC,
+  assists NUMERIC,
+  national TEXT,
+  position TEXT,
+  height NUMERIC,
+  ownGoals NUMERIC,
+  club TEXT
+);
+
 CREATE TABLE players (
   id          SERIAL,
   nameAlias   TEXT,
@@ -53,7 +74,10 @@ CREATE TABLE players (
 );
 
 ALTER TABLE users ADD id SERIAL;
+ALTER TABLE nameAlias ADD nameAlias TEXT;
 alter table users add players json[];
+
+CREATE UNIQUE INDEX nameAlias ON wc_players (nameAlias)
 
 curl -d "email=ins429@gmail.com&password=pass" "localhost:8080/signup"
 
@@ -61,5 +85,5 @@ curl -d "email=ins429@gmail.com&password=pass" "localhost:8080/signup"
 https://code.google.com/p/go/source/browse/html/?repo=net
 https://godoc.org/code.google.com/p/go.net/html#Attribute
 
-select distinct on nameAlias from players;
+select distinct nameAlias from players;
 

@@ -65,7 +65,7 @@ input[type=text]:focus, input[type=email]:focus, input[type=url]:focus, input[ty
   height: 16px;
 }
 
-.fa {
+.menu .fa {
   margin-right: 5px;
 }
 
@@ -79,7 +79,7 @@ input[type=text]:focus, input[type=email]:focus, input[type=url]:focus, input[ty
 }
 
 .wrapper {
-  width: 480px;
+  width: 325px;
   margin: 0 auto;
   padding: 5px;
 }
@@ -88,6 +88,17 @@ input[type=text]:focus, input[type=email]:focus, input[type=url]:focus, input[ty
   margin-bottom: 15px;
   background: #fff;
   border-radius: 5px;
+}
+
+.wc-image {
+  display: block;
+  width: 150px;
+  margin: 0 auto;
+  overflow: hidden;
+  -webkit-border-radius: 100px;
+  -moz-border-radius: 100px;
+  -ms-border-radius: 100px;
+  -o-border-radius: 100px;
 }
 
 .card {
@@ -157,17 +168,6 @@ img.center {
 
 .button:hover {
   background: #007aff;
-  color: #fff;
-  text-decoration: none;
-}
-
-.button.green {
-  border: 1px solid #4dd865;
-  color: #4dd865;
-}
-
-.button.green:hover {
-  background: #4dd865;
   color: #fff;
   text-decoration: none;
 }
@@ -263,6 +263,11 @@ li.tag {
 
 #search {
   font: 300 13px/26px 'helvetica neue';
+}
+
+#search-card {
+  margin: 0 auto;
+  width: 310px;
 }
 
 /* cards */
@@ -398,7 +403,7 @@ img { max-width: 100% }
   position: absolute;
   top: 0;
   left: 0;
-  margin: 40px 0 0 2px;
+  margin: 40px 0 0 10px;
   width: 230px;
 }
 
@@ -533,7 +538,7 @@ img { max-width: 100% }
   color: #fcfeff;
 }
 
-.card-data {
+.card-data, .card-data-long {
   margin: 0;
   padding: 0;
   color: #81878b;
@@ -543,10 +548,10 @@ img { max-width: 100% }
   width: 32%;
   text-align: center;
   display: inline-block;
-  font-size: 1em;
+  font-size: .8em;
   line-height: 1.2em;
   border-right: solid 1px #bdc3c7;
-  margin-top: .2em;
+  margin-top: .5em;
 }
 
 .card-data li:nth-child(3n) {
@@ -557,15 +562,23 @@ img { max-width: 100% }
   display: block;
   text-transform: uppercase;
   font-size: .3em;
-  margin-top: .6em;
+  margin: .6em;
   font-weight: 700;
 }
 
-.card-data li label {
+.card-data-long li {
+  text-align: center;
   display: block;
+  font-size: .8em;
+  line-height: 1.2em;
+  margin: .5em;
+}
+
+.card-data-long li label {
   text-transform: uppercase;
-  font-size: .5em;
-  font-weight:700;
+  font-size: .3em;
+  margin: .6em;
+  font-weight: 700;
 }
 
 .add-card {

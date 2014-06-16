@@ -138,20 +138,34 @@ var SearchCard = React.createClass({
     });
   },
 
+  // select players from the list
+  selectPlayer: function(e) {
+    this.refs.playerName.getDOMNode().value = e.target.dataset.name;
+  },
+
+  // gives timeout before blur on input
+  blurList: function() {
+    var self = this;
+    setTimeout(function() {
+      self.props.toggle();
+    }, 300)
+  },
+
   render: function() {
+    var self = this;
     var displayedNames = this.state.players.filter(function(item) {
       var match = item.toLowerCase().indexOf(this.state.nameFilter.toLowerCase());
       return (match !== -1);
     }.bind(this));
 
-    var playersLi = displayedNames.map(function(p) {
-      return <li>{p}</li>;
+    var playersLi = displayedNames.map(function(name) {
+      return <li data-name={name} onClick={self.selectPlayer}>{name}</li>;
     });
     var playersUl = <ul>{playersLi}</ul>;
 
     return (
       <div>
-        <input id="player-name" type="text" onChange={this.handleFilterChange} onBlur={this.props.toggle} onFocus={this.props.toggle} ref="playerName" onKeyPress={this.searchCard} />
+        <input id="player-name" type="text" onChange={this.handleFilterChange} onBlur={this.blurList} onFocus={this.props.toggle} ref="playerName" onKeyPress={this.searchCard} />
         <button className="button" onClick={this.searchCard}>Search</button>
         <div id="players-list">
           {playersUl}
@@ -160,4 +174,3 @@ var SearchCard = React.createClass({
     );
   }
 });
-
