@@ -23,6 +23,11 @@ input[type=text]:focus, input[type=email]:focus, input[type=url]:focus, input[ty
   box-shadow: none;
 }
 
+.card:hover {
+  box-shadow:inset rgba(255,255,255,.1) 1000px 0;
+  -moz-box-shadow:inset rgba(255,255,255,.1) 1000px 0;
+}
+
 .card-header > h3 {
   color: #fff;
 }
@@ -61,6 +66,12 @@ input[type=text]:focus, input[type=email]:focus, input[type=url]:focus, input[ty
   border: 1px solid #fff;
   border-bottom: 0;
   padding: 5px;
+}
+
+#players-list ul li:hover {
+  cursor: pointer;
+  box-shadow:inset rgba(255,255,255,.1) 1000px 0;
+  -moz-box-shadow:inset rgba(255,255,255,.1) 1000px 0;
 }
 
 #players-list ul li:last-child {

@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 var WCCard = React.createClass({
   addCard: function() {
-    this.props.addCard(this.props.player.nameAlias);
+    this.props.addCard(this.props.player.name);
   },
   removeCard: function() {
     this.props.removeCard(this.props.player.nameAlias);

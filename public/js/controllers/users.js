@@ -41,7 +41,7 @@ app.controller('Users', function UsersCtrl($rootScope, $scope, $route, api) {
           this.push(value.name);
         }, names);
 
-        api.getCard({
+        api.getWCCard({
           names: names
         }).then(function(data) {
           if (data && data.stats) {
