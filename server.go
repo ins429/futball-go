@@ -45,7 +45,7 @@ type PlayerNames struct {
 func main() {
 	m := martini.Classic()
 
-	db, err := sql.Open("postgres", "user=ins429 dbname=fcards sslmode=disable")
+	db, err := sql.Open("postgres", "user=plee dbname=fcards sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}

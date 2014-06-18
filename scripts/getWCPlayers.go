@@ -41,7 +41,7 @@ func main() {
 		panic(err)
 	}
 
-	db, err := sql.Open("postgres", "user=ins429 dbname=fcards sslmode=disable")
+	db, err := sql.Open("postgres", "user=plee dbname=fcards sslmode=disable")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -79,10 +79,29 @@ func InsertPlayerStat(db *sql.DB, player map[string]interface{}) {
 	position := player["position"]
 	ownGoals := player["ownGoals"]
 
-	_, err := db.Exec("INSERT INTO wc_players (age, foot, goals, club, uid, name, birthCountry, birthCity, penaltyGoals, birthDate, image, height, assists, weight, national, position, ownGoals) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)", age, foot, goals, club, uid, name, birthCountry, birthCity, penaltyGoals, birthDate, image, height, assists, weight, national, position, ownGoals)
+  var idStr string
+  rows, err := db.Query("SELECT uid FROM wc_players WHERE uid = $1", player["id"].(string))
+  for rows.Next() {
+    err = rows.Scan(&idStr)
+  }
+
 	if err != nil {
 		fmt.Println("Insert error", err)
 	}
+
+  if idStr == "" {
+    _, err := db.Exec("INSERT INTO wc_players (age, foot, goals, club, uid, name, birthCountry, birthCity, penaltyGoals, birthDate, image, height, assists, weight, national, position, ownGoals) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)", age, foot, goals, club, uid, name, birthCountry, birthCity, penaltyGoals, birthDate, image, height, assists, weight, national, position, ownGoals)
+    if err != nil {
+      fmt.Println("Insert error", err)
+    }
+    fmt.Println(player["firstName"].(string) + " does not exists")
+  } else {
+    _, err := db.Exec("UPDATE wc_players SET age = $1, foot = $2, goals = $3, club = $4, uid = $5, name = $6, birthCountry = $7, birthCity = $8, penaltyGoals = $9, birthDate = $10, image = $11, height = $12, assists = $13, weight = $14, national = $15, position = $16, ownGoals = $17 WHERE uid = $18", age, foot, goals, club, uid, name, birthCountry, birthCity, penaltyGoals, birthDate, image, height, assists, weight, national, position, ownGoals, uid)
+    if err != nil {
+      fmt.Println("Update error", err)
+    }
+    fmt.Println(player["firstName"].(string) + " exists")
+  }
 }
 
 func Capitalize(str string) string {
