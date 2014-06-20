@@ -1,1 +1,1 @@
-web: ./futball-go
+web: futball-go
