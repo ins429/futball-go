@@ -7,13 +7,14 @@ var WCCard = React.createClass({
     this.props.removeCard(this.props.player.nameAlias);
   },
   render: function() {
+    console.log(this.props)
     var dob = new Date(this.props.player.birthDate),
     style = {
-      'font-size': '.8em'
+      'font-size': '14px'
     }
     return (
       <div className="card">
-        <h1 style={this.props.player.name.length > 30 ? style : {}}>{this.props.player.name}<i className="fa fa-plus add-card" onClick={this.addCard}></i><i className="fa fa-minus add-card" onClick={this.removeCard}></i></h1>
+        <h1 style={this.props.player.name.length > 30 ? style : {}}>{this.props.player.name}<i style={this.props.user ? {display:'visible'} : {display:'none'}} className="fa fa-plus add-card" onClick={this.addCard}></i><i style={this.props.user ? {display:'visible'} : {display:'none'}}className="fa fa-minus add-card" onClick={this.removeCard}></i></h1>
         <a className="wc-image" href="#">
           <img src={this.props.player.image} />
         </a>
@@ -76,10 +77,12 @@ var WCCard = React.createClass({
 
 var WCCards = React.createClass({
   render: function() {
-    var addCard = this.props.addCard;
-    var removeCard = this.props.removeCard;
+    var addCard = this.props.addCard,
+      removeCard = this.props.removeCard,
+      user = this.props.user;
+
     var cardNodes = this.props.players.map(function(player, arr) {
-      return <WCCard player={player} addCard={addCard} removeCard={removeCard}/>;
+      return <WCCard player={player} addCard={addCard} removeCard={removeCard} user={user} />;
     }); 
 
     return <div className="card-wrapper">{cardNodes}</div>;

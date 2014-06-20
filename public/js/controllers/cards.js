@@ -93,6 +93,7 @@ app.directive('cards', function(api, $rootScope, $timeout) {
     restrict: 'E',
     scope: {
       cards: '=',
+      user: '=',
     },
     link: function (scope, elem, attrs) {
       scope.addCard = function(name) {
@@ -119,13 +120,17 @@ app.directive('cards', function(api, $rootScope, $timeout) {
         });
       };
 
+      scope.$watch('user', function(oldVal, newVal) {
+        updateView();
+      });
+
       scope.$watch('cards', function(oldVal, newVal) {
         updateView();
       });
 
       function updateView() {
         if (scope.cards.length > 0) {
-          React.renderComponent(window.WCCards({players: scope.cards, removeCard: scope.removeCard, addCard: scope.addCard}), elem[0]);
+          React.renderComponent(window.WCCards({players: scope.cards, removeCard: scope.removeCard, addCard: scope.addCard, user: scope.user}), elem[0]);
         }
       }
     }
@@ -151,6 +156,6 @@ function mergeCards(cards, newCards) {
       }
     }
   }
-  return cards.concat(newCards);
+  return newCards.concat(cards);
 }
 
