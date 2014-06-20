@@ -1,1 +1,1 @@
-web: ./fcards
+web: ./futball-go
