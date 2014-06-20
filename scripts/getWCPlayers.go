@@ -1,5 +1,3 @@
-package main
-
 import (
 	"database/sql"
 	"encoding/json"
@@ -11,6 +9,10 @@ import (
 )
 
 func main() {
+  getWcPlayers()
+}
+
+func getWcPlayers() {
 	resp, err := http.Get("http://worldcup.kimonolabs.com/api/players?limit=800&apikey=0485cc45db1c8668a85c41d23ebff0b3")
 
 	if err != nil {
@@ -104,16 +106,16 @@ func InsertPlayerStat(db *sql.DB, player map[string]interface{}) {
   }
 }
 
-func Capitalize(str string) string {
-	letters := []rune(str)
-	letters[0] = unicode.ToUpper(letters[0])
-	cappedStr := string(letters)
-	return cappedStr
-}
-
-func Uncapitalize(str string) string {
-	letters := []rune(str)
-	letters[0] = unicode.ToLower(letters[0])
-	cappedStr := string(letters)
-	return cappedStr
-}
+// func Capitalize(str string) string {
+// 	letters := []rune(str)
+// 	letters[0] = unicode.ToUpper(letters[0])
+// 	cappedStr := string(letters)
+// 	return cappedStr
+// }
+// 
+// func Uncapitalize(str string) string {
+// 	letters := []rune(str)
+// 	letters[0] = unicode.ToLower(letters[0])
+// 	cappedStr := string(letters)
+// 	return cappedStr
+// }

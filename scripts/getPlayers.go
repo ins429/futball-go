@@ -9,15 +9,16 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-
 	"strings"
 	"unicode"
-
-	// goquery
 	. "github.com/PuerkitoBio/goquery"
 )
 
-func main() {
+// func main() {
+//   getEplPlayers();
+// }
+
+func getEplPlayers() {
 	for i := 0; i <= 241; i++ {
 		resp, err := http.Get("http://www.premierleague.com/ajax/player/index/A_TO_Z/null/null/ALL/null/null/null/ALL/null/null/20/4/2/2/" + strconv.Itoa(i) + "/null.json")
 		defer resp.Body.Close()
@@ -117,16 +118,16 @@ func GetPlayerStat(nameAlias string) {
 	}
 }
 
-func Capitalize(str string) string {
-	letters := []rune(str)
-	letters[0] = unicode.ToUpper(letters[0])
-	cappedStr := string(letters)
-	return cappedStr
-}
-
-func Uncapitalize(str string) string {
-	letters := []rune(str)
-	letters[0] = unicode.ToLower(letters[0])
-	cappedStr := string(letters)
-	return cappedStr
-}
+// func Capitalize(str string) string {
+// 	letters := []rune(str)
+// 	letters[0] = unicode.ToUpper(letters[0])
+// 	cappedStr := string(letters)
+// 	return cappedStr
+// }
+//
+// func Uncapitalize(str string) string {
+// 	letters := []rune(str)
+// 	letters[0] = unicode.ToLower(letters[0])
+// 	cappedStr := string(letters)
+// 	return cappedStr
+// }
