@@ -1,1 +1,1 @@
-web: futbol-cards
+web: server.go
