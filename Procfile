@@ -1,1 +1,1 @@
-web: futball-go
+web: futbol-cards
