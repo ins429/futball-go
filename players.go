@@ -10,6 +10,10 @@ import (
 	"unicode"
 )
 
+type PlayerNames struct {
+	Names []string `form:"names" json:"names"`
+}
+
 type WCPlayerStatsResponse struct {
 	Status int            `json:"status"`
 	Stats  []WCPlayerStat `json:"stats"`
