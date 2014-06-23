@@ -12,8 +12,7 @@ import (
 	_ "github.com/lib/pq"
 	"log"
 	"net/http"
-	// "strings"
-	// "reflect"
+	"os"
 	"strconv"
 )
 
@@ -67,7 +66,7 @@ func main() {
 	m.Put("/add_card", binding.Bind(AddCardForm{}), addCard)
 	m.Delete("/remove_card", binding.Bind(AddCardForm{}), removeCard)
 
-	http.ListenAndServe(":8081", m)
+	http.ListenAndServe(":"+os.Getenv("PORT"), m)
 	m.Run()
 }
 
