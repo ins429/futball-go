@@ -39,6 +39,7 @@ func SetupDB() *sql.DB {
 }
 
 func main() {
+	fmt.Println("starting futbol-cards")
 	m := martini.Classic()
 	m.Map(SetupDB())
 
