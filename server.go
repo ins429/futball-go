@@ -33,6 +33,7 @@ type AddCardForm struct {
 func SetupDB() *sql.DB {
 	db, err := sql.Open("postgres", "user=root password=DqtWgzbqofxDcIJ4 dbname=futbol-cards sslmode=disable")
 	if err != nil {
+		fmt.Println(err)
 		log.Fatal(err)
 	}
 	return db
