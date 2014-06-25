@@ -34,7 +34,7 @@ func SetupDB() *sql.DB {
 	dokkuDB := os.Getenv("DATABASE_URL")
 	fmt.Println("here")
 	fmt.Println(dokkuDB)
-	db, err := sql.Open("postgres", dokkuDB)
+	db, err := sql.Open("postgres", dokkuDB+"?ssl=false")
 	if err != nil {
 		fmt.Println(err)
 		log.Fatal(err)
