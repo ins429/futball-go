@@ -21,7 +21,9 @@ app.service('api', function($http) {
     },
 
     fbSignup: function(params) {
+      console.log(params)
       var user = $http({method: 'POST', url: '/fb_signup', data: params}).then(function(resp){
+        console.log(params)
         return resp.data;
       }, function(resp) {
         return resp.data;
@@ -31,7 +33,9 @@ app.service('api', function($http) {
     },
 
     fbLogin: function(params) {
+      console.log(params)
       var user = $http({method: 'POST', url: '/fb_login', data: params}).then(function(resp){
+        console.log(params)
         return resp.data;
       }, function(resp) {
         return resp.data;
