@@ -32,7 +32,8 @@ type AddCardForm struct {
 
 func SetupDB() *sql.DB {
 	dokkuDB := os.Getenv("DATABASE_URL")
-	db, err := sql.Open("postgres", dokkuDB+"sslmode=disable")
+	fmt.Println(dokkuDB)
+	db, err := sql.Open("postgres", dokkuDB)
 	if err != nil {
 		fmt.Println(err)
 		log.Fatal(err)
