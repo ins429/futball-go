@@ -30,7 +30,7 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: cards; Type: TABLE; Schema: public; Owner: plee; Tablespace: 
+-- Name: cards; Type: TABLE; Schema: public; Owner: root; Tablespace: 
 --
 
 CREATE TABLE cards (
@@ -41,10 +41,10 @@ CREATE TABLE cards (
 );
 
 
-ALTER TABLE public.cards OWNER TO plee;
+ALTER TABLE public.cards OWNER TO root;
 
 --
--- Name: cards_id_seq; Type: SEQUENCE; Schema: public; Owner: plee
+-- Name: cards_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE cards_id_seq
@@ -55,17 +55,17 @@ CREATE SEQUENCE cards_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.cards_id_seq OWNER TO plee;
+ALTER TABLE public.cards_id_seq OWNER TO root;
 
 --
--- Name: cards_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: plee
+-- Name: cards_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE cards_id_seq OWNED BY cards.id;
 
 
 --
--- Name: players; Type: TABLE; Schema: public; Owner: plee; Tablespace: 
+-- Name: players; Type: TABLE; Schema: public; Owner: root; Tablespace: 
 --
 
 CREATE TABLE players (
@@ -97,10 +97,10 @@ CREATE TABLE players (
 );
 
 
-ALTER TABLE public.players OWNER TO plee;
+ALTER TABLE public.players OWNER TO root;
 
 --
--- Name: players_id_seq; Type: SEQUENCE; Schema: public; Owner: plee
+-- Name: players_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE players_id_seq
@@ -111,17 +111,17 @@ CREATE SEQUENCE players_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.players_id_seq OWNER TO plee;
+ALTER TABLE public.players_id_seq OWNER TO root;
 
 --
--- Name: players_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: plee
+-- Name: players_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE players_id_seq OWNED BY players.id;
 
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: plee; Tablespace: 
+-- Name: users; Type: TABLE; Schema: public; Owner: root; Tablespace: 
 --
 
 CREATE TABLE users (
@@ -137,10 +137,10 @@ CREATE TABLE users (
 );
 
 
-ALTER TABLE public.users OWNER TO plee;
+ALTER TABLE public.users OWNER TO root;
 
 --
--- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: plee
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE users_id_seq
@@ -151,17 +151,17 @@ CREATE SEQUENCE users_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.users_id_seq OWNER TO plee;
+ALTER TABLE public.users_id_seq OWNER TO root;
 
 --
--- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: plee
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE users_id_seq OWNED BY users.id;
 
 
 --
--- Name: wc_players; Type: TABLE; Schema: public; Owner: plee; Tablespace: 
+-- Name: wc_players; Type: TABLE; Schema: public; Owner: root; Tablespace: 
 --
 
 CREATE TABLE wc_players (
@@ -186,10 +186,10 @@ CREATE TABLE wc_players (
 );
 
 
-ALTER TABLE public.wc_players OWNER TO plee;
+ALTER TABLE public.wc_players OWNER TO root;
 
 --
--- Name: wc_players_id_seq; Type: SEQUENCE; Schema: public; Owner: plee
+-- Name: wc_players_id_seq; Type: SEQUENCE; Schema: public; Owner: root
 --
 
 CREATE SEQUENCE wc_players_id_seq
@@ -200,69 +200,69 @@ CREATE SEQUENCE wc_players_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.wc_players_id_seq OWNER TO plee;
+ALTER TABLE public.wc_players_id_seq OWNER TO root;
 
 --
--- Name: wc_players_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: plee
+-- Name: wc_players_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: root
 --
 
 ALTER SEQUENCE wc_players_id_seq OWNED BY wc_players.id;
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: plee
+-- Name: id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY cards ALTER COLUMN id SET DEFAULT nextval('cards_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: plee
+-- Name: id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY players ALTER COLUMN id SET DEFAULT nextval('players_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: plee
+-- Name: id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY users ALTER COLUMN id SET DEFAULT nextval('users_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: plee
+-- Name: id; Type: DEFAULT; Schema: public; Owner: root
 --
 
 ALTER TABLE ONLY wc_players ALTER COLUMN id SET DEFAULT nextval('wc_players_id_seq'::regclass);
 
 
 --
--- Data for Name: cards; Type: TABLE DATA; Schema: public; Owner: plee
+-- Data for Name: cards; Type: TABLE DATA; Schema: public; Owner: root
 --
 
 COPY cards (id, name, created_at, updated_at) FROM stdin;
 \.
 
 --
--- Name: players_id_seq; Type: SEQUENCE SET; Schema: public; Owner: plee
+-- Name: players_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('players_id_seq', 4, true);
 
 --
--- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: plee
+-- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: root
 --
 
 SELECT pg_catalog.setval('users_id_seq', 1, true);
 
 --
--- Name: public; Type: ACL; Schema: -; Owner: plee
+-- Name: public; Type: ACL; Schema: -; Owner: root
 --
 
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
-REVOKE ALL ON SCHEMA public FROM plee;
-GRANT ALL ON SCHEMA public TO plee;
+REVOKE ALL ON SCHEMA public FROM root;
+GRANT ALL ON SCHEMA public TO root;
 GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
