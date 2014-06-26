@@ -1,15 +1,9 @@
 /** @jsx React.DOM */
 var Card = React.createClass({
-  addCard: function() {
-    this.props.addCard(this.props.player.nameAlias);
-  },
-  removeCard: function() {
-    this.props.removeCard(this.props.player.nameAlias);
-  },
   render: function() {
     return (
       <div className="card">
-        <h1>{this.props.player.name}<i className="fa fa-plus add-card" onClick={this.addCard}></i><i className="fa fa-minus add-card" onClick={this.removeCard}></i></h1>
+        <h1>{this.props.player.name}</h1>
         <a href="#">
           <img src={"http://www.premierleague.com/" + this.props.player.image} />
         </a>
@@ -106,10 +100,8 @@ var Card = React.createClass({
 
 var Cards = React.createClass({
   render: function() {
-    var addCard = this.props.addCard;
-    var removeCard = this.props.removeCard;
     var cardNodes = this.props.players.map(function(player, arr) {
-      return <Card player={player} addCard={addCard} removeCard={removeCard}/>;
+      return <Card player={player} />;
     }); 
 
     return <div className="card-wrapper">{cardNodes}</div>;

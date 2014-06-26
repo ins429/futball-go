@@ -2,19 +2,6 @@ app.controller('Cards', function cardsCtrl($rootScope, $scope, $route, $routePar
   $scope.initCards = function() {
     $rootScope.cards = [];
   };
-
-  // pop form to edit an card
-  $scope.editCard = function(card) {
-    $scope.cardData = {
-      action: 'edit',
-      modalName: card.name,
-      id: card.id,
-      name: card.name,
-      tags: card.tags,
-      url: card.url
-    }
-  };
-
 });
 
 app.directive('searchWcCard', function(api, $rootScope) {
@@ -52,78 +39,13 @@ app.directive('searchWcCard', function(api, $rootScope) {
   }
 });
 
-app.directive('searchCard', function(api, $rootScope) {
-  return {
-    restrict: 'E',
-    scope: {
-    },
-    link: function (scope, elem, attrs) {
-      scope.searchCard = function(name) {
-        // do nothing if name is not there
-        if (!name || name === '')
-          return;
-
-        var params = {
-          names: [name.replace(" ", "-")]
-        }
-        console.log(params)
-        api.getCard(params).then(function(data) {
-          if (data && data.stats) {
-            $rootScope.cards = mergeCards($rootScope.cards, data.stats);
-            scope.playerName = '';
-          } else {
-            // fix me, handle error
-          }
-        });
-      };
-
-      scope.toggle = function() {
-        angular.element(document.querySelector('#players-list')).toggleClass('active');
-      };
-
-      scope.$watch('init', function(){
-        React.renderComponent(window.SearchCard({searchCard: scope.searchCard, toggle: scope.toggle}), elem[0]);
-      })
-    }
-  }
-});
-
 app.directive('cards', function(api, $rootScope, $timeout) {
   return {
     restrict: 'E',
     scope: {
       cards: '=',
-      user: '=',
     },
     link: function (scope, elem, attrs) {
-      scope.addCard = function(name) {
-        var params = {
-          name: name
-        }
-        api.addCard(params).then(function(data) {
-          console.log(data);
-          // do something
-        });
-      };
-
-      scope.removeCard = function(name) {
-        var params = {
-          name: name
-        }
-        api.removeCard(params).then(function(data) {
-          if (data.status === 200) {
-            scope.cards = removeCard($rootScope.cards, name);
-            // need to fix this update view why this act is not being watched
-            updateView()
-          }
-          // do something
-        });
-      };
-
-      scope.$watch('user', function(oldVal, newVal) {
-        updateView();
-      });
-
       scope.$watch('cards', function(oldVal, newVal) {
         updateView();
       });

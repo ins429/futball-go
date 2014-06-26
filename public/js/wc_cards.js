@@ -7,7 +7,6 @@ var WCCard = React.createClass({
     this.props.removeCard(this.props.player.nameAlias);
   },
   render: function() {
-    console.log(this.props)
     var dob = new Date(this.props.player.birthDate),
     style = {
       'font-size': '14px'
