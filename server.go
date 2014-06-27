@@ -20,7 +20,8 @@ type GeneralResponse struct {
 }
 
 func SetupDB() *sql.DB {
-	// db, err := sql.Open("postgres", "user=root password=eaP7F1ZyCU6f40Ii host=172.17.42.1 port=49155 dbname=db sslmode=disable")
+	// dokkuDB := os.Getenv("DATABASE_URL")
+	db, err := sql.Open("postgres", "user=root password=eaP7F1ZyCU6f40Ii host=172.17.42.1 port=49155 dbname=db sslmode=disable")
 	if err != nil {
 		fmt.Println(err)
 		log.Fatal(err)
