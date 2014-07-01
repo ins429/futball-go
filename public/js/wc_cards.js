@@ -14,9 +14,9 @@ var WCCard = React.createClass({
     return (
       <div className="card">
         <h1 style={this.props.player.name.length > 30 ? style : {}}>{this.props.player.name}<i style={this.props.user ? {display:'visible'} : {display:'none'}} className="fa fa-plus add-card" onClick={this.addCard}></i><i style={this.props.user ? {display:'visible'} : {display:'none'}}className="fa fa-minus add-card" onClick={this.removeCard}></i></h1>
-        <a className="wc-image" href="#">
+        <span className="wc-image" href="#">
           <img src={this.props.player.image} />
-        </a>
+        </span>
         <ul className="card-data-long">
           <li>
             <label>National</label>
