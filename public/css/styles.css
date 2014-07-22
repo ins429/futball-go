@@ -7,12 +7,8 @@ body {
 }
 
 @media (max-width: 580px) {
-  #search-card {
-    margin: 8px 0 8px 28px !important;
-  }
-
   #players-list {
-    left: 20px !important;
+    /* left: 20px !important; */
   }
 }
 
@@ -281,6 +277,10 @@ li.tag {
   width: 310px;
 }
 
+#search-card .button {
+  margin-left: 3px;
+}
+
 /* cards */
 .card h1 {
   font-size: 16px;
@@ -307,8 +307,8 @@ li.tag {
   position: absolute;
   top: 0;
   left: 0;
-  margin: 40px 0 0 10px;
-  width: 230px;
+  margin: 36px 0 0 7px;
+  width: 231px;
 }
 
 #players-list.active {
